@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
     `id`         INT UNSIGNED  NOT NULL AUTO_INCREMENT,
     `user_id`    INT UNSIGNED  NOT NULL  COMMENT 'Mỗi user có danh mục riêng',
     `name`       VARCHAR(100)  NOT NULL  COMMENT 'VD: Ăn uống, Đi lại, Lương',
-    `type`       ENUM('income','expense','both') NOT NULL DEFAULT 'both'
+    `type`       ENUM('income','expense') NOT NULL
                                COMMENT 'Giới hạn danh mục xuất hiện ở form thu/chi', --Có both là sao
     `icon`       VARCHAR(50)   NULL      COMMENT 'Bootstrap icon: bi-cart, bi-car-front...',
     `color`      VARCHAR(7)    NULL      COMMENT 'Hex cho Chart.js: #FF6384',
