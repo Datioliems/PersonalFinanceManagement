@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
     `user_id`    INT UNSIGNED  NOT NULL  COMMENT 'Mỗi user có danh mục riêng',
     `name`       VARCHAR(100)  NOT NULL  COMMENT 'VD: Ăn uống, Đi lại, Lương',
     `type`       ENUM('income','expense','both') NOT NULL DEFAULT 'both'
-                               COMMENT 'Giới hạn danh mục xuất hiện ở form thu/chi',
+                               COMMENT 'Giới hạn danh mục xuất hiện ở form thu/chi', --Có both là sao
     `icon`       VARCHAR(50)   NULL      COMMENT 'Bootstrap icon: bi-cart, bi-car-front...',
     `color`      VARCHAR(7)    NULL      COMMENT 'Hex cho Chart.js: #FF6384',
     `created_at` DATETIME      NOT NULL  DEFAULT CURRENT_TIMESTAMP,

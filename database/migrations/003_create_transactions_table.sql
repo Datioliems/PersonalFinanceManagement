@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `transactions` (
     `note`        VARCHAR(500)        NULL,
     `trans_date`  DATE                NOT NULL  COMMENT 'Ngày user nhập, không phải ngày tạo record',
     `created_at`  DATETIME            NOT NULL  DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`  DATETIME            NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `updated_at`  DATETIME            NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,--Có được sửa không
 
     PRIMARY KEY (`id`),
     -- 3 composite index cho các query thường dùng nhất

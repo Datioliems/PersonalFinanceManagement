@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `email`          VARCHAR(150)  NOT NULL,
     `password_hash`  VARCHAR(255)  NOT NULL   COMMENT 'bcrypt — KHÔNG lưu plain text',
     `remember_token` VARCHAR(64)   NULL       COMMENT 'Token cho Remember Me (Ngày 6)',
+    `token_expires_at` DATETIME,
     `is_active`      TINYINT(1)    NOT NULL   DEFAULT 1,
     `created_at`     DATETIME      NOT NULL   DEFAULT CURRENT_TIMESTAMP,
     `updated_at`     DATETIME      NOT NULL   DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
