@@ -52,18 +52,24 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                         } ?>
                     </small>
                 </div>
-                <!-- Xoá -->
-                <form method="POST"
-                      action="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/delete"
-                      class="flex-shrink-0">
-                    <input type="hidden" name="csrf_token"
-                           value="<?= htmlspecialchars($csrf, ENT_QUOTES) ?>">
-                    <button type="submit"
-                            class="btn btn-sm btn-outline-danger py-0 px-2"
-                            data-confirm="Xoá danh mục '<?= htmlspecialchars($cat['name'], ENT_QUOTES) ?>'?">
-                        <i class="bi bi-trash3"></i>
-                    </button>
-                </form>
+                <!-- Sửa/Xoá -->
+                <div class="flex-shrink-0 d-flex gap-1">
+                    <a href="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/edit"
+                       class="btn btn-sm btn-outline-secondary py-0 px-2">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST"
+                          action="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/delete"
+                          class="m-0">
+                        <input type="hidden" name="csrf_token"
+                               value="<?= htmlspecialchars($csrf, ENT_QUOTES) ?>">
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-danger py-0 px-2"
+                                data-confirm="Xoá danh mục '<?= htmlspecialchars($cat['name'], ENT_QUOTES) ?>'?">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -96,7 +102,6 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                         <select name="type" class="form-select">
                             <option value="expense">Chi tiêu</option>
                             <option value="income">Thu nhập</option>
-                            <option value="both">Cả hai</option>
                         </select>
                     </div>
                     <div class="row g-3">

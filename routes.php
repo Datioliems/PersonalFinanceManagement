@@ -13,8 +13,7 @@ use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
 use App\Controllers\CategoryController;
 use App\Controllers\BudgetController;
-use App\Controllers\ExpenseController;
-use App\Controllers\IncomeController;
+use App\Controllers\TransactionController;
 use App\Controllers\ReportController;
 
 // ── Public (không cần đăng nhập) ─────────────────────────────
@@ -30,25 +29,19 @@ $router->get('/logout',   [AuthController::class, 'logout']);
 $router->get('/',          [DashboardController::class, 'index'], ['auth']);
 $router->get('/dashboard', [DashboardController::class, 'index'], ['auth']);
 
-// TV3 — Chi tiêu
-$router->get('/expenses',               [ExpenseController::class, 'index'],   ['auth']);
-$router->get('/expenses/create',        [ExpenseController::class, 'create'],  ['auth']);
-$router->post('/expenses',              [ExpenseController::class, 'store'],   ['auth']);
-$router->get('/expenses/{id}/edit',     [ExpenseController::class, 'edit'],    ['auth']);
-$router->post('/expenses/{id}',         [ExpenseController::class, 'update'],  ['auth']);
-$router->post('/expenses/{id}/delete',  [ExpenseController::class, 'destroy'], ['auth']);
-
-// TV4 — Thu nhập
-$router->get('/incomes',               [IncomeController::class, 'index'],   ['auth']);
-$router->get('/incomes/create',        [IncomeController::class, 'create'],  ['auth']);
-$router->post('/incomes',              [IncomeController::class, 'store'],   ['auth']);
-$router->get('/incomes/{id}/edit',     [IncomeController::class, 'edit'],    ['auth']);
-$router->post('/incomes/{id}',         [IncomeController::class, 'update'],  ['auth']);
-$router->post('/incomes/{id}/delete',  [IncomeController::class, 'destroy'], ['auth']);
+// TV3 & TV4 (Hợp nhất) — Giao dịch
+$router->get('/transactions',               [TransactionController::class, 'index'],   ['auth']);
+$router->get('/transactions/create',        [TransactionController::class, 'create'],  ['auth']);
+$router->post('/transactions',              [TransactionController::class, 'store'],   ['auth']);
+$router->get('/transactions/{id}/edit',     [TransactionController::class, 'edit'],    ['auth']);
+$router->post('/transactions/{id}',         [TransactionController::class, 'update'],  ['auth']);
+$router->post('/transactions/{id}/delete',  [TransactionController::class, 'destroy'], ['auth']);
 
 // TV2 — Danh mục
 $router->get('/categories',              [CategoryController::class, 'index'],   ['auth']);
 $router->post('/categories',             [CategoryController::class, 'store'],   ['auth']);
+$router->get('/categories/{id}/edit',    [CategoryController::class, 'edit'],    ['auth']);
+$router->post('/categories/{id}',        [CategoryController::class, 'update'],  ['auth']);
 $router->post('/categories/{id}/delete', [CategoryController::class, 'destroy'], ['auth']);
 
 // TV2 — Ngân sách

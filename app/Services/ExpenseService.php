@@ -75,12 +75,17 @@ class ExpenseService
             throw new \InvalidArgumentException('Số tiền phải lớn hơn 0.');
         }
 
-        $updated = $this->txRepo->update($id, $userId, [
+        $updatedData = [
             'category_id' => (int)($data['category_id'] ?? 0),
             'amount'      => $amount,
             'note'        => trim($data['note'] ?? ''),
             'trans_date'  => $data['trans_date'] ?? '',
-        ]);
+        ];
+        if (isset($data['type'])) {
+            $updatedData['type'] = $data['type'];
+        }
+        
+        $updated = $this->txRepo->update($id, $userId, $updatedData);
 
         if (!$updated) {
             throw new \RuntimeException('Không tìm thấy giao dịch hoặc bạn không có quyền sửa.');

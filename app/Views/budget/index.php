@@ -160,7 +160,7 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                         </label>
                         <input type="number" name="limit_amount"
                                class="form-control"
-                               min="1000" step="1000"
+                               min="1000"
                                placeholder="VD: 2000000"
                                required>
                     </div>

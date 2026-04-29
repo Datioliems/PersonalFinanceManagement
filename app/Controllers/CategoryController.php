@@ -48,14 +48,16 @@ class CategoryController extends BaseController
      */
     public function store(): void
     {
+        $returnUrl = $_POST['return_url'] ?? '/categories';
+
         if (!CsrfTokenManager::validate($_POST['csrf_token'] ?? '')) {
             FlashMessage::set('danger', 'Phiên hết hạn. Vui lòng thử lại.');
-            $this->redirect('/categories');
+            $this->redirect($returnUrl);
         }
         CsrfTokenManager::invalidate();
 
         $name  = trim($_POST['name']  ?? '');
-        $type  = $_POST['type']        ?? 'both';
+        $type  = $_POST['type']        ?? 'expense';
         $icon  = trim($_POST['icon']  ?? '') ?: null;
         $color = trim($_POST['color'] ?? '') ?: null;
         $uid   = $this->currentUserId();
@@ -63,17 +65,17 @@ class CategoryController extends BaseController
         // Validate
         if (strlen($name) < 2) {
             FlashMessage::set('danger', 'Tên danh mục phải có ít nhất 2 ký tự.');
-            $this->redirect('/categories');
+            $this->redirect($returnUrl);
         }
-        if (!in_array($type, ['income', 'expense', 'both'], true)) {
+        if (!in_array($type, ['income', 'expense'], true)) {
             FlashMessage::set('danger', 'Loại danh mục không hợp lệ.');
-            $this->redirect('/categories');
+            $this->redirect($returnUrl);
         }
 
         // Kiểm tra trùng tên
         if ($this->catRepo->findByNameAndUser($name, $uid)) {
             FlashMessage::set('warning', "Danh mục \"{$name}\" đã tồn tại.");
-            $this->redirect('/categories');
+            $this->redirect($returnUrl);
         }
 
         $this->catRepo->save([
@@ -85,6 +87,78 @@ class CategoryController extends BaseController
         ]);
 
         FlashMessage::set('success', "Đã tạo danh mục \"{$name}\".");
+        $this->redirect($returnUrl);
+    }
+
+    // ── GET /categories/{id}/edit ────────────────────────────
+    /**
+     * Hiển thị form sửa danh mục.
+     */
+    public function edit(string $id): void
+    {
+        $uid = $this->currentUserId();
+        $cat = $this->catRepo->findById((int)$id);
+
+        if (!$cat || (int)$cat['user_id'] !== $uid) {
+            FlashMessage::set('danger', 'Không tìm thấy danh mục.');
+            $this->redirect('/categories');
+        }
+
+        $csrf = CsrfTokenManager::generate();
+        $this->render('categories/edit', [
+            'cat'       => $cat,
+            'csrf'      => $csrf,
+            'pageTitle' => 'Sửa danh mục',
+        ]);
+    }
+
+    // ── POST /categories/{id} ────────────────────────────────
+    /**
+     * Xử lý cập nhật danh mục.
+     */
+    public function update(string $id): void
+    {
+        if (!CsrfTokenManager::validate($_POST['csrf_token'] ?? '')) {
+            FlashMessage::set('danger', 'Phiên hết hạn. Vui lòng thử lại.');
+            $this->redirect('/categories');
+        }
+        CsrfTokenManager::invalidate();
+
+        $uid   = $this->currentUserId();
+        $name  = trim($_POST['name']  ?? '');
+        $type  = $_POST['type']        ?? 'expense';
+        $color = trim($_POST['color'] ?? '') ?: null;
+        $icon  = trim($_POST['icon']  ?? '') ?: null;
+
+        // Validate
+        if (strlen($name) < 2) {
+            FlashMessage::set('danger', 'Tên danh mục phải có ít nhất 2 ký tự.');
+            $this->redirect("/categories/{$id}/edit");
+        }
+        if (!in_array($type, ['income', 'expense'], true)) {
+            FlashMessage::set('danger', 'Loại danh mục không hợp lệ.');
+            $this->redirect("/categories/{$id}/edit");
+        }
+
+        // Kiểm tra trùng tên (trừ chính nó)
+        $existing = $this->catRepo->findByNameAndUser($name, $uid);
+        if ($existing && (int)$existing['id'] !== (int)$id) {
+            FlashMessage::set('warning', "Danh mục \"{$name}\" đã tồn tại.");
+            $this->redirect("/categories/{$id}/edit");
+        }
+
+        $updated = $this->catRepo->update((int)$id, $uid, [
+            'name'  => $name,
+            'type'  => $type,
+            'color' => $color,
+            'icon'  => $icon,
+        ]);
+
+        if ($updated) {
+            FlashMessage::set('success', 'Đã cập nhật danh mục thành công.');
+        } else {
+            FlashMessage::set('warning', 'Không tìm thấy danh mục hoặc không có thay đổi.');
+        }
         $this->redirect('/categories');
     }
 

@@ -72,11 +72,35 @@ class CategoryRepository extends BaseRepository
         $stmt->execute([
             ':uid'   => $data['user_id'],
             ':name'  => $data['name'],
-            ':type'  => $data['type']  ?? 'both',
+            ':type'  => $data['type']  ?? 'expense',
             ':icon'  => $data['icon']  ?? null,
             ':color' => $data['color'] ?? null,
         ]);
         return (int) $this->db->lastInsertId();
+    }
+
+    /**
+     * Cập nhật danh mục.
+     */
+    public function update(int $id, int $userId, array $data): bool
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE categories
+             SET    name  = :name,
+                    type  = :type,
+                    color = :color,
+                    icon  = :icon
+             WHERE  id = :id AND user_id = :uid'
+        );
+        $stmt->execute([
+            ':name'  => $data['name'],
+            ':type'  => $data['type']  ?? 'expense',
+            ':color' => $data['color'] ?? null,
+            ':icon'  => $data['icon']  ?? null,
+            ':id'    => $id,
+            ':uid'   => $userId,
+        ]);
+        return $stmt->rowCount() > 0;
     }
 
     /**

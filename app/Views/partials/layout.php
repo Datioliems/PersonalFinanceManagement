@@ -57,15 +57,9 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?= navActive('/expenses', $cp) ?>"
-                       href="<?= BASE_URL ?>/expenses">
-                        <i class="bi bi-arrow-up-circle"></i> Chi tiêu
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?= navActive('/incomes', $cp) ?>"
-                       href="<?= BASE_URL ?>/incomes">
-                        <i class="bi bi-arrow-down-circle"></i> Thu nhập
+                    <a class="nav-link <?= navActive('/transactions', $cp) ?>"
+                       href="<?= BASE_URL ?>/transactions">
+                        <i class="bi bi-receipt"></i> Giao dịch
                     </a>
                 </li>
                 <li class="nav-item">

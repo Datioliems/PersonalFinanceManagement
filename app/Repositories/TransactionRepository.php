@@ -66,7 +66,7 @@ class TransactionRepository extends BaseRepository
      */
     public function findFiltered(
         int    $userId,
-        string $type,
+        string $type        = '',
         string $sort        = 'date_desc',
         string $filterMonth = '',
         int    $limit       = 15,
@@ -84,8 +84,13 @@ class TransactionRepository extends BaseRepository
         $sql    = 'SELECT t.*, c.name AS category_name, c.color AS category_color
                    FROM   transactions t
                    JOIN   categories   c ON t.category_id = c.id
-                   WHERE  t.user_id = :uid AND t.type = :type';
-        $params = [':uid' => $userId, ':type' => $type];
+                   WHERE  t.user_id = :uid';
+        $params = [':uid' => $userId];
+
+        if ($type !== '') {
+            $sql .= ' AND t.type = :type';
+            $params[':type'] = $type;
+        }
 
         if (!empty($filterMonth) && preg_match('/^\d{4}-\d{2}$/', $filterMonth)) {
             $sql          .= ' AND DATE_FORMAT(t.trans_date, \'%Y-%m\') = :month';
@@ -107,10 +112,15 @@ class TransactionRepository extends BaseRepository
     /**
      * Đếm theo filter (cho Paginator khi dùng findFiltered).
      */
-    public function countFiltered(int $userId, string $type, string $filterMonth = ''): int
+    public function countFiltered(int $userId, string $type = '', string $filterMonth = ''): int
     {
-        $sql    = 'SELECT COUNT(*) FROM transactions WHERE user_id = :uid AND type = :type';
-        $params = [':uid' => $userId, ':type' => $type];
+        $sql    = 'SELECT COUNT(*) FROM transactions WHERE user_id = :uid';
+        $params = [':uid' => $userId];
+
+        if ($type !== '') {
+            $sql .= ' AND type = :type';
+            $params[':type'] = $type;
+        }
 
         if (!empty($filterMonth) && preg_match('/^\d{4}-\d{2}$/', $filterMonth)) {
             $sql          .= ' AND DATE_FORMAT(trans_date, \'%Y-%m\') = :month';
@@ -234,24 +244,31 @@ class TransactionRepository extends BaseRepository
      */
     public function update(int $id, int $userId, array $data): bool
     {
-        $stmt = $this->db->prepare(
-            'UPDATE transactions
+        $sql = 'UPDATE transactions
              SET    category_id = :cid,
                     amount      = :amount,
                     note        = :note,
                     trans_date  = :date,
-                    updated_at  = NOW()
-             WHERE  id      = :id
-               AND  user_id = :uid'
-        );
-        $stmt->execute([
+                    updated_at  = NOW()';
+
+        $params = [
             ':cid'    => $data['category_id'],
             ':amount' => $data['amount'],
             ':note'   => $data['note'] ?? '',
             ':date'   => $data['trans_date'],
-            ':id'     => $id,
-            ':uid'    => $userId,
-        ]);
+        ];
+
+        if (isset($data['type'])) {
+            $sql .= ', type = :type';
+            $params[':type'] = $data['type'];
+        }
+
+        $sql .= ' WHERE id = :id AND user_id = :uid';
+        $params[':id'] = $id;
+        $params[':uid'] = $userId;
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->rowCount() > 0;
     }
 
