@@ -19,7 +19,7 @@ $allData=json_decode($allChartsJson??'{}',true);
 $hasIncome=!empty($allData['incomeDonut']['labels']??[]);
 $hasExpense=!empty($allData['expenseDonut']['labels']??[]);
 ?>
-<!-- Header (sticky) -->
+<!-- Header -->
 <div class="page-header-shared mb-3 flex-wrap gap-2 rp-sticky-header">
   <div>
     <h1 class="page-title">
