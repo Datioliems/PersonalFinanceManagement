@@ -1,5 +1,0 @@
-.env
-/storage/logs/*.log
-/vendor/
-.DS_Store
-Thumbs.db

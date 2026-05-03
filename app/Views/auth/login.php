@@ -5,8 +5,14 @@
 // Biến nhận từ AuthController::showLogin():
 //   $csrf — CSRF token (string)
 // ============================================================
+/** @var string $csrf */
 $pageTitle = 'Đăng nhập';
+$extraCss  = BASE_URL . '/css/auth.css';
 require BASE_PATH . '/app/Views/partials/layout.php';
+
+// Pre-fill username từ session nếu vừa đăng ký
+$prefillUsername = $_SESSION['_login_prefill_username'] ?? '';
+unset($_SESSION['_login_prefill_username']);
 ?>
 
 <div class="row justify-content-center mt-4">
@@ -48,7 +54,7 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                                    autofocus
                                    autocomplete="username"
                                    placeholder="Nhập tên đăng nhập"
-                                   value="<?= htmlspecialchars($_POST['username'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                   value="<?= htmlspecialchars($prefillUsername ?: ($_POST['username'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                         </div>
                     </div>
 

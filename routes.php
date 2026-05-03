@@ -50,8 +50,14 @@ $router->post('/budget',              [BudgetController::class, 'setLimit'], ['a
 $router->post('/budget/{id}/delete',  [BudgetController::class, 'destroy'],  ['auth']);
 
 // TV5 — Báo cáo
-$router->get('/report',         [ReportController::class, 'index'],  ['auth']);
-$router->get('/report/export',  [ReportController::class, 'export'], ['auth']);
+$router->get('/report',                  [ReportController::class, 'index'],          ['auth']);
+$router->get('/report/export',           [ReportController::class, 'export'],         ['auth']);
+$router->get('/report/transactions',     [ReportController::class, 'transactions'],   ['auth']);
+$router->get('/report/category-detail',  [ReportController::class, 'categoryDetail'], ['auth']);
+
+// TV5 — Dashboard export & AJAX
+$router->get('/dashboard/export',        [DashboardController::class, 'export'],       ['auth']);
+$router->get('/dashboard/transactions',  [DashboardController::class, 'transactions'], ['auth']);
 
 // ── Auth nâng cao ──────────────────────────────────────────
 $router->get('/verify-email',     [AuthController::class, 'verifyEmail']);

@@ -62,9 +62,16 @@ class CategoryRepository extends BaseRepository
 
     /**
      * Tạo danh mục mới. Trả về ID vừa insert.
+     * 
+     * @throws \InvalidArgumentException nếu user_id <= 0
      */
     public function save(array $data): int
     {
+        // ❌ Validation: user_id phải > 0 (tránh xung đột FK)
+        if (empty($data['user_id']) || (int)$data['user_id'] <= 0) {
+            throw new \InvalidArgumentException('User ID không hợp lệ. Bạn phải đăng nhập.');
+        }
+
         $stmt = $this->db->prepare(
             'INSERT INTO categories (user_id, name, type, icon, color)
              VALUES (:uid, :name, :type, :icon, :color)'
@@ -81,9 +88,16 @@ class CategoryRepository extends BaseRepository
 
     /**
      * Cập nhật danh mục.
+     * 
+     * @throws \InvalidArgumentException nếu user_id <= 0
      */
     public function update(int $id, int $userId, array $data): bool
     {
+        // ❌ Validation: user_id phải > 0 (tránh xung đột FK)
+        if ($userId <= 0) {
+            throw new \InvalidArgumentException('User ID không hợp lệ. Bạn phải đăng nhập.');
+        }
+
         $stmt = $this->db->prepare(
             'UPDATE categories
              SET    name  = :name,

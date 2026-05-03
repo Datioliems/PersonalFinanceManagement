@@ -1,0 +1,200 @@
+/* ============================================================
+   categories.css — Styles riêng trang Danh mục
+   Dùng bởi: app/Views/categories/index.php
+============================================================ */
+
+/* ── Page header ─────────────────────────────────────────── */
+/* ── Page header — moved to layout.php ─────────────────────────── */
+.btn-add-cat {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: #0f172a;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: .5rem 1.1rem;
+    font-size: .88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .2s, transform .15s, box-shadow .2s;
+    white-space: nowrap;
+    text-decoration: none;
+}
+.btn-add-cat:hover {
+    background: #1e293b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, .18);
+    color: #fff;
+}
+.btn-add-cat:active { transform: translateY(0); }
+
+/* ── Category grid ───────────────────────────────────────── */
+.cat-grid { display: grid; gap: 1rem; }
+@media (min-width: 576px)  { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 768px)  { .cat-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1200px) { .cat-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* ── Category card ───────────────────────────────────────── */
+.cat-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1.5px solid #f1f5f9;
+    /* Gạch màu trên đầu theo màu danh mục (CSS variable) */
+    border-top: 3px solid var(--cat-color, #6366f1);
+    padding: 1.1rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform .22s cubic-bezier(.4, 0, .2, 1),
+                box-shadow .22s cubic-bezier(.4, 0, .2, 1),
+                border-color .22s;
+    /* Animation stagger được set bởi JS */
+    animation: catFadeUp .35s ease both;
+}
+.cat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px -6px rgba(0, 0, 0, .1);
+    border-color: transparent;
+    border-top-color: var(--cat-color, #6366f1);
+}
+
+/* Icon wrap */
+.cat-icon-wrap {
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cat-color-bg, #f1f5f9);
+    transition: transform .2s;
+}
+.cat-card:hover .cat-icon-wrap {
+    transform: scale(1.1) rotate(-3deg);
+}
+.cat-icon-wrap i {
+    font-size: 1.3rem;
+    color: var(--cat-color, #6366f1);
+}
+
+/* Tên + badge */
+.cat-info { flex: 1; min-width: 0; }
+.cat-name {
+    font-weight: 600;
+    font-size: .95rem;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: .25rem;
+}
+
+/* Badges loại */
+.cat-badge {
+    display: inline-block;
+    padding: .18em .65em;
+    border-radius: 50px;
+    font-size: .73rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+.cat-badge-income  { background: #dcfce7; color: #16a34a; }
+.cat-badge-expense { background: #fee2e2; color: #dc2626; }
+.cat-badge-both    { background: #f1f5f9; color: #64748b; }
+
+/* Nút sửa / xóa (ẩn, hiện khi hover card) */
+.cat-actions {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    opacity: 0;
+    transform: translateX(8px);
+    transition: opacity .2s, transform .2s;
+}
+.cat-card:hover .cat-actions {
+    opacity: 1;
+    transform: translateX(0);
+}
+.cat-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1.5px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .8rem;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+    text-decoration: none;
+    background: transparent;
+}
+.cat-btn:active { transform: scale(.92); }
+
+.cat-btn-edit { border-color: #cbd5e1; color: #64748b; }
+.cat-btn-edit:hover { background: #f1f5f9; color: #0f172a; border-color: #94a3b8; }
+
+.cat-btn-del { border-color: #fecaca; color: #ef4444; }
+.cat-btn-del:hover { background: #fee2e2; border-color: #f87171; color: #dc2626; }
+
+/* ── Empty state ─────────────────────────────────────────── */
+.cat-empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    background: #fff;
+    border-radius: 20px;
+    border: 2px dashed #e2e8f0;
+}
+.cat-empty-icon {
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: 1rem;
+    opacity: .35;
+    color: #6366f1;
+}
+.cat-empty h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: .4rem;
+}
+.cat-empty p {
+    color: #94a3b8;
+    font-size: .875rem;
+    margin-bottom: 1.25rem;
+}
+
+/* ── Modal ───────────────────────────────────────────────── */
+#modalCreate .modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, .2);
+}
+#modalCreate .modal-header {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 1.25rem 1.5rem 1rem;
+}
+#modalCreate .modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+#modalCreate .modal-body  { padding: 1.25rem 1.5rem; }
+#modalCreate .modal-footer {
+    border-top: 1px solid #f1f5f9;
+    padding: 1rem 1.5rem;
+    gap: .5rem;
+}
+
+/* ── Cập nhật ── Không còn dùng preview box tự chế vì đã chuyển sang dùng input-group của Bootstrap ── */
+
+/* ── Entrance animation ───────────────────────────────────── */
+@keyframes catFadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

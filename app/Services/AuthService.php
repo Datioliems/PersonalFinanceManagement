@@ -49,7 +49,7 @@ class AuthService implements Authenticatable
             throw new \RuntimeException('Tài khoản đã bị khoá.');
         }
 
-        if (!($user['email_verified'] ?? 1)) {
+        if (!($user['email_verified'] ?? 0)) {
             $this->userRepo->logLogin($uid, $username, $ip, 'failed');
             throw new \RuntimeException('Email chưa được xác nhận. Kiểm tra hộp thư và bấm link xác nhận.');
         }
@@ -104,6 +104,7 @@ class AuthService implements Authenticatable
             'email'              => $email,
             'password_hash'      => password_hash($password, PASSWORD_BCRYPT),
             'email_verify_token' => $verifyToken,
+            'email_verified'     => 0, // Chưa xác nhận — cần bấm link trong mail
         ]);
 
         $appUrl = $_ENV['APP_URL'] ?? 'http://localhost:8000';

@@ -7,6 +7,7 @@
 /** @var string $csrf */
 
 $pageTitle = 'Thêm giao dịch';
+$extraCss  = BASE_URL . '/css/transactions.css';
 require BASE_PATH . '/app/Views/partials/layout.php';
 ?>
 
@@ -35,11 +36,30 @@ require BASE_PATH . '/app/Views/partials/layout.php';
             <span class="input-group-text bg-white text-muted">
                 <i class="bi bi-cash-stack"></i>
             </span>
-            <input type="number" name="amount" class="form-control"
-                   min="1" required
-                   placeholder="VD: 150000"
-                   value="<?= htmlspecialchars($_POST['amount'] ?? '', ENT_QUOTES) ?>">
+            <?php 
+                $oldAmount = $_POST['amount'] ?? '';
+                $displayAmount = $oldAmount ? number_format((float)$oldAmount, 0, ',', '.') : '';
+            ?>
+            <input type="hidden" name="amount" id="realAmount" value="<?= htmlspecialchars($oldAmount, ENT_QUOTES) ?>">
+            <input type="text" id="displayAmount" class="form-control" required
+                   placeholder="VD: 150.000"
+                   value="<?= htmlspecialchars($displayAmount, ENT_QUOTES) ?>">
             <span class="input-group-text bg-white text-muted">đ</span>
+        </div>
+    </div>
+
+    <!-- Loại giao dịch -->
+    <div class="mb-3">
+        <label class="form-label fw-medium">Loại giao dịch <span class="text-danger">*</span></label>
+        <div class="d-flex gap-4">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="trans_type" id="typeExpense" value="expense" checked>
+                <label class="form-check-label text-danger" for="typeExpense">Chi tiêu </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="trans_type" id="typeIncome" value="income">
+                <label class="form-check-label text-success" for="typeIncome">Thu nhập </label>
+            </div>
         </div>
     </div>
 
@@ -64,48 +84,43 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                 <i class="bi bi-chevron-down flex-shrink-0"></i>
             </button>
             <ul class="dropdown-menu w-100 shadow-sm" style="max-height:300px;overflow-y:auto;">
-                <li><h6 class="dropdown-header">Thu nhập</h6></li>
-                <?php foreach ($incomeCats as $cat):
-                    $icon  = htmlspecialchars($cat['icon']  ?? 'bi-tag',    ENT_QUOTES);
-                    $color = htmlspecialchars($cat['color'] ?? '#16a34a',   ENT_QUOTES);
-                    $name  = htmlspecialchars($cat['name'],                  ENT_QUOTES);
-                ?>
-                <li>
-                    <a class="dropdown-item cat-option d-flex align-items-center gap-2" href="#"
-                       data-value="income_<?= (int)$cat['id'] ?>"
-                       data-icon="<?= $icon ?>" data-color="<?= $color ?>" data-name="<?= $name ?>">
-                        <i class="<?= $icon ?>" style="color:<?= $color ?>;width:16px"></i>
-                        <span><?= $name ?></span>
-                        <span class="badge ms-auto" style="background:#dcfce8;color:#16a34a;font-size:.65em">Thu</span>
-                    </a>
-                </li>
-                <?php endforeach; ?>
-                <?php if (empty($incomeCats)): ?>
-                <li><span class="dropdown-item-text text-muted small">Chưa có danh mục thu nhập</span></li>
-                <?php endif; ?>
-                <li><hr class="dropdown-divider"></li>
-                <li><h6 class="dropdown-header">Chi tiêu</h6></li>
                 <?php foreach ($expenseCats as $cat):
                     $icon  = htmlspecialchars($cat['icon']  ?? 'bi-tag',    ENT_QUOTES);
                     $color = htmlspecialchars($cat['color'] ?? '#dc2626',   ENT_QUOTES);
                     $name  = htmlspecialchars($cat['name'],                  ENT_QUOTES);
                 ?>
-                <li>
+                <li class="cat-item" data-type="expense">
                     <a class="dropdown-item cat-option d-flex align-items-center gap-2" href="#"
                        data-value="expense_<?= (int)$cat['id'] ?>"
                        data-icon="<?= $icon ?>" data-color="<?= $color ?>" data-name="<?= $name ?>">
                         <i class="<?= $icon ?>" style="color:<?= $color ?>;width:16px"></i>
                         <span><?= $name ?></span>
-                        <span class="badge ms-auto" style="background:#fee2e2;color:#dc2626;font-size:.65em">Chi</span>
                     </a>
                 </li>
                 <?php endforeach; ?>
                 <?php if (empty($expenseCats)): ?>
-                <li><span class="dropdown-item-text text-muted small">Chưa có danh mục chi tiêu</span></li>
+                <li class="cat-item" data-type="expense"><span class="dropdown-item-text text-muted small">Chưa có danh mục chi tiêu</span></li>
+                <?php endif; ?>
+
+                <?php foreach ($incomeCats as $cat):
+                    $icon  = htmlspecialchars($cat['icon']  ?? 'bi-tag',    ENT_QUOTES);
+                    $color = htmlspecialchars($cat['color'] ?? '#16a34a',   ENT_QUOTES);
+                    $name  = htmlspecialchars($cat['name'],                  ENT_QUOTES);
+                ?>
+                <li class="cat-item" data-type="income" style="display:none;">
+                    <a class="dropdown-item cat-option d-flex align-items-center gap-2" href="#"
+                       data-value="income_<?= (int)$cat['id'] ?>"
+                       data-icon="<?= $icon ?>" data-color="<?= $color ?>" data-name="<?= $name ?>">
+                        <i class="<?= $icon ?>" style="color:<?= $color ?>;width:16px"></i>
+                        <span><?= $name ?></span>
+                    </a>
+                </li>
+                <?php endforeach; ?>
+                <?php if (empty($incomeCats)): ?>
+                <li class="cat-item" data-type="income" style="display:none;"><span class="dropdown-item-text text-muted small">Chưa có danh mục thu nhập</span></li>
                 <?php endif; ?>
             </ul>
         </div>
-        <div class="form-text text-muted">Chọn Thu nhập = cộng tiền &bull; Chọn Chi tiêu = trừ tiền</div>
     </div>
 
     <!-- Ngày -->
@@ -122,7 +137,7 @@ require BASE_PATH . '/app/Views/partials/layout.php';
         <label class="form-label fw-medium">Ghi chú</label>
         <textarea name="note" class="form-control" rows="2"
                   placeholder="Mô tả giao dịch (tuỳ chọn)"
-                  maxlength="500"><?= htmlspecialchars($_POST['note'] ?? '', ENT_QUOTES) ?></textarea>
+                  maxlength="20"><?= htmlspecialchars($_POST['note'] ?? '', ENT_QUOTES) ?></textarea>
     </div>
 
     <div class="d-grid gap-2">
@@ -162,15 +177,21 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                     </select>
                 </div>
                 <div class="row g-3">
-                    <div class="col-6">
-                        <label class="form-label">Màu sắc</label>
-                        <input type="color" name="color" class="form-control form-control-color w-100" value="#16a34a">
+                    <div class="col-auto">
+                        <label for="quickCatColor" class="form-label">Màu sắc</label>
+                        <input type="color" id="quickCatColor" name="color" class="form-control form-control-color" value="#16a34a" title="Chọn màu sắc" style="height: 38px; width: 60px;">
                     </div>
-                    <div class="col-6">
-                        <label class="form-label">Icon Bootstrap</label>
-                        <input type="text" name="icon" class="form-control" placeholder="bi-cup-hot">
-                        <div class="form-text">
-                            <a href="https://icons.getbootstrap.com" target="_blank">Xem icon</a>
+                    <div class="col">
+                        <label for="quickCatIcon" class="form-label">Icon</label>
+                        <div class="input-group" style="cursor:pointer"
+                             data-icon-picker="quickCatIcon">
+                            <span class="input-group-text bg-white border-end-0 px-2" id="quickIconPreviewBox" style="color: #16a34a;">
+                                <i class="bi bi-tag" id="quickIconPreviewEl"></i>
+                            </span>
+                            <input type="text" id="quickCatIcon" name="icon" class="form-control border-start-0 border-end-0 ps-0" placeholder="Chọn icon..." autocomplete="off" readonly style="cursor: pointer; background-color: #fff;">
+                            <span class="input-group-text bg-white text-muted border-start-0">
+                                <i class="bi bi-chevron-down" style="font-size: .8rem"></i>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -186,17 +207,81 @@ require BASE_PATH . '/app/Views/partials/layout.php';
 <?php require BASE_PATH . '/app/Views/partials/footer.php'; ?>
 
 <script>
-document.querySelectorAll('.cat-option').forEach(function(item) {
-    item.addEventListener('click', function(e) {
-        e.preventDefault();
-        var val   = this.dataset.value;
-        var icon  = this.dataset.icon;
-        var color = this.dataset.color;
-        var name  = this.dataset.name;
-        document.getElementById('catHiddenInput').value = val;
-        document.getElementById('catDisplay').innerHTML =
-            '<i class="' + icon + ' me-1" style="color:' + color + '"></i>' + name;
-        document.getElementById('catDisplay').classList.remove('text-muted');
+document.addEventListener('DOMContentLoaded', function() {
+    const typeRadios = document.querySelectorAll('input[name="trans_type"]');
+    const catItems = document.querySelectorAll('.cat-item');
+    const catHiddenInput = document.getElementById('catHiddenInput');
+    const catDisplay = document.getElementById('catDisplay');
+
+    function filterCategories() {
+        const selectedType = document.querySelector('input[name="trans_type"]:checked').value;
+        catItems.forEach(item => {
+            if (item.dataset.type === selectedType) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Reset selection if the hidden input's value doesn't match the new type
+        if (catHiddenInput.value && !catHiddenInput.value.startsWith(selectedType + '_')) {
+            catHiddenInput.value = '';
+            catDisplay.innerHTML = '-- Chọn danh mục --';
+            catDisplay.classList.add('text-muted');
+        }
+    }
+
+    typeRadios.forEach(radio => radio.addEventListener('change', filterCategories));
+    
+    // Initial filter on load
+    filterCategories();
+
+    document.querySelectorAll('.cat-option').forEach(function(item) {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            var val   = this.dataset.value;
+            var icon  = this.dataset.icon;
+            var color = this.dataset.color;
+            var name  = this.dataset.name;
+            catHiddenInput.value = val;
+            catDisplay.innerHTML =
+                '<i class="' + icon + ' me-1" style="color:' + color + '"></i>' + name;
+            catDisplay.classList.remove('text-muted');
+        });
     });
+
+    // Format tiền tệ
+    const displayAmount = document.getElementById('displayAmount');
+    const realAmount = document.getElementById('realAmount');
+
+    if (displayAmount && realAmount) {
+        displayAmount.addEventListener('input', function(e) {
+            // Remove non-digit characters
+            let val = this.value.replace(/\D/g, '');
+            realAmount.value = val;
+            
+            // Format with dots
+            if (val !== '') {
+                this.value = parseInt(val, 10).toLocaleString('vi-VN');
+            } else {
+                this.value = '';
+            }
+        });
+    }
+    // Live preview cho modal tạo nhanh danh mục
+    const quickColorInput = document.getElementById('quickCatColor');
+    const quickIconBox    = document.getElementById('quickIconPreviewBox');
+    const quickIconInput  = document.getElementById('quickCatIcon');
+    const quickIconEl     = document.getElementById('quickIconPreviewEl');
+
+    if (quickColorInput && quickIconBox) {
+        quickColorInput.addEventListener('input', e => quickIconBox.style.color = e.target.value);
+    }
+    if (quickIconInput && quickIconEl) {
+        quickIconInput.addEventListener('input', e => {
+            let cls = e.target.value.trim() || 'bi-tag';
+            quickIconEl.className = cls.startsWith('bi-') ? 'bi ' + cls : 'bi bi-tag';
+        });
+    }
 });
 </script>

@@ -63,6 +63,12 @@ class CategoryController extends BaseController
         $uid   = $this->currentUserId();
 
         // Validate
+        // ❌ Kiểm tra user_id hợp lệ (phải > 0)
+        if ($uid <= 0) {
+            FlashMessage::set('danger', 'Bạn phải đăng nhập để thêm danh mục.');
+            $this->redirect('/auth/login');
+        }
+
         if (strlen($name) < 2) {
             FlashMessage::set('danger', 'Tên danh mục phải có ít nhất 2 ký tự.');
             $this->redirect($returnUrl);
@@ -78,15 +84,26 @@ class CategoryController extends BaseController
             $this->redirect($returnUrl);
         }
 
-        $this->catRepo->save([
-            'user_id' => $uid,
-            'name'    => $name,
-            'type'    => $type,
-            'icon'    => $icon,
-            'color'   => $color,
-        ]);
+        try {
+            $this->catRepo->save([
+                'user_id' => $uid,
+                'name'    => $name,
+                'type'    => $type,
+                'icon'    => $icon,
+                'color'   => $color,
+            ]);
+            FlashMessage::set('success', "Đã tạo danh mục \"{$name}\".");
+        } catch (\InvalidArgumentException $e) {
+            FlashMessage::set('danger', $e->getMessage());
+        } catch (\PDOException $e) {
+            // ❌ Bắt xung đột FK từ MySQL
+            if (strpos($e->getMessage(), '23000') !== false || strpos($e->getMessage(), '1452') !== false) {
+                FlashMessage::set('danger', 'Lỗi: User_id không tồn tại. Vui lòng đăng nhập lại.');
+            } else {
+                FlashMessage::set('danger', 'Có lỗi khi tạo danh mục: ' . $e->getMessage());
+            }
+        }
 
-        FlashMessage::set('success', "Đã tạo danh mục \"{$name}\".");
         $this->redirect($returnUrl);
     }
 
@@ -131,6 +148,12 @@ class CategoryController extends BaseController
         $icon  = trim($_POST['icon']  ?? '') ?: null;
 
         // Validate
+        // ❌ Kiểm tra user_id hợp lệ (phải > 0)
+        if ($uid <= 0) {
+            FlashMessage::set('danger', 'Bạn phải đăng nhập để chỉnh sửa danh mục.');
+            $this->redirect('/auth/login');
+        }
+
         if (strlen($name) < 2) {
             FlashMessage::set('danger', 'Tên danh mục phải có ít nhất 2 ký tự.');
             $this->redirect("/categories/{$id}/edit");
@@ -147,18 +170,30 @@ class CategoryController extends BaseController
             $this->redirect("/categories/{$id}/edit");
         }
 
-        $updated = $this->catRepo->update((int)$id, $uid, [
-            'name'  => $name,
-            'type'  => $type,
-            'color' => $color,
-            'icon'  => $icon,
-        ]);
+        try {
+            $updated = $this->catRepo->update((int)$id, $uid, [
+                'name'  => $name,
+                'type'  => $type,
+                'color' => $color,
+                'icon'  => $icon,
+            ]);
 
-        if ($updated) {
-            FlashMessage::set('success', 'Đã cập nhật danh mục thành công.');
-        } else {
-            FlashMessage::set('warning', 'Không tìm thấy danh mục hoặc không có thay đổi.');
+            if ($updated) {
+                FlashMessage::set('success', 'Đã cập nhật danh mục thành công.');
+            } else {
+                FlashMessage::set('warning', 'Không tìm thấy danh mục hoặc không có thay đổi.');
+            }
+        } catch (\InvalidArgumentException $e) {
+            FlashMessage::set('danger', $e->getMessage());
+        } catch (\PDOException $e) {
+            // ❌ Bắt xung đột FK từ MySQL
+            if (strpos($e->getMessage(), '23000') !== false || strpos($e->getMessage(), '1452') !== false) {
+                FlashMessage::set('danger', 'Lỗi: User_id không tồn tại. Vui lòng đăng nhập lại.');
+            } else {
+                FlashMessage::set('danger', 'Có lỗi khi cập nhật danh mục: ' . $e->getMessage());
+            }
         }
+
         $this->redirect('/categories');
     }
 

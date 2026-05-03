@@ -8,6 +8,7 @@
 /** @var string $csrf */
 
 $pageTitle = 'Sửa giao dịch';
+$extraCss  = BASE_URL . '/css/transactions.css';
 require BASE_PATH . '/app/Views/partials/layout.php';
 ?>
 
@@ -31,9 +32,9 @@ require BASE_PATH . '/app/Views/partials/layout.php';
         <label class="form-label fw-medium">Số tiền (VNĐ) <span class="text-danger">*</span></label>
         <div class="input-group">
             <span class="input-group-text bg-white text-muted"><i class="bi bi-cash-stack"></i></span>
-            <input type="number" name="amount" class="form-control"
-                   min="1" required
-                   value="<?= htmlspecialchars($tx['amount'], ENT_QUOTES) ?>">
+            <input type="hidden" name="amount" id="realAmount" value="<?= htmlspecialchars($tx['amount'], ENT_QUOTES) ?>">
+            <input type="text" id="displayAmount" class="form-control" required
+                   value="<?= htmlspecialchars(number_format($tx['amount'], 0, ',', '.'), ENT_QUOTES) ?>">
             <span class="input-group-text bg-white text-muted">đ</span>
         </div>
     </div>
@@ -71,48 +72,49 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                 <i class="bi bi-chevron-down flex-shrink-0"></i>
             </button>
             <ul class="dropdown-menu w-100 shadow-sm" style="max-height:300px;overflow-y:auto;">
-                <li><h6 class="dropdown-header">Thu nhập</h6></li>
-                <?php foreach ($incomeCats as $cat):
-                    $icon  = htmlspecialchars($cat['icon']  ?? 'bi-tag',  ENT_QUOTES);
-                    $color = htmlspecialchars($cat['color'] ?? '#16a34a', ENT_QUOTES);
-                    $name  = htmlspecialchars($cat['name'],                ENT_QUOTES);
-                ?>
-                <li>
-                    <a class="dropdown-item cat-option d-flex align-items-center gap-2" href="#"
-                       data-value="income_<?= (int)$cat['id'] ?>"
-                       data-icon="<?= $icon ?>" data-color="<?= $color ?>" data-name="<?= $name ?>">
-                        <i class="<?= $icon ?>" style="color:<?= $color ?>;width:16px"></i>
-                        <span><?= $name ?></span>
-                        <span class="badge ms-auto" style="background:#dcfce8;color:#16a34a;font-size:.65em">Thu</span>
-                    </a>
-                </li>
-                <?php endforeach; ?>
-                <?php if (empty($incomeCats)): ?>
-                <li><span class="dropdown-item-text text-muted small">Chưa có danh mục thu nhập</span></li>
-                <?php endif; ?>
-                <li><hr class="dropdown-divider"></li>
-                <li><h6 class="dropdown-header">Chi tiêu</h6></li>
-                <?php foreach ($expenseCats as $cat):
-                    $icon  = htmlspecialchars($cat['icon']  ?? 'bi-tag',  ENT_QUOTES);
-                    $color = htmlspecialchars($cat['color'] ?? '#dc2626', ENT_QUOTES);
-                    $name  = htmlspecialchars($cat['name'],                ENT_QUOTES);
-                ?>
-                <li>
-                    <a class="dropdown-item cat-option d-flex align-items-center gap-2" href="#"
-                       data-value="expense_<?= (int)$cat['id'] ?>"
-                       data-icon="<?= $icon ?>" data-color="<?= $color ?>" data-name="<?= $name ?>">
-                        <i class="<?= $icon ?>" style="color:<?= $color ?>;width:16px"></i>
-                        <span><?= $name ?></span>
-                        <span class="badge ms-auto" style="background:#fee2e2;color:#dc2626;font-size:.65em">Chi</span>
-                    </a>
-                </li>
-                <?php endforeach; ?>
-                <?php if (empty($expenseCats)): ?>
-                <li><span class="dropdown-item-text text-muted small">Chưa có danh mục chi tiêu</span></li>
+                <?php if ($tx['type'] === 'income'): ?>
+                    <li><h6 class="dropdown-header">Thu nhập</h6></li>
+                    <?php foreach ($incomeCats as $cat):
+                        $icon  = htmlspecialchars($cat['icon']  ?? 'bi-tag',  ENT_QUOTES);
+                        $color = htmlspecialchars($cat['color'] ?? '#16a34a', ENT_QUOTES);
+                        $name  = htmlspecialchars($cat['name'],                ENT_QUOTES);
+                    ?>
+                    <li>
+                        <a class="dropdown-item cat-option d-flex align-items-center gap-2" href="#"
+                           data-value="income_<?= (int)$cat['id'] ?>"
+                           data-icon="<?= $icon ?>" data-color="<?= $color ?>" data-name="<?= $name ?>">
+                            <i class="<?= $icon ?>" style="color:<?= $color ?>;width:16px"></i>
+                            <span><?= $name ?></span>
+                            <span class="badge ms-auto" style="background:#dcfce8;color:#16a34a;font-size:.65em">Thu</span>
+                        </a>
+                    </li>
+                    <?php endforeach; ?>
+                    <?php if (empty($incomeCats)): ?>
+                    <li><span class="dropdown-item-text text-muted small">Chưa có danh mục thu nhập</span></li>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <li><h6 class="dropdown-header">Chi tiêu</h6></li>
+                    <?php foreach ($expenseCats as $cat):
+                        $icon  = htmlspecialchars($cat['icon']  ?? 'bi-tag',  ENT_QUOTES);
+                        $color = htmlspecialchars($cat['color'] ?? '#dc2626', ENT_QUOTES);
+                        $name  = htmlspecialchars($cat['name'],                ENT_QUOTES);
+                    ?>
+                    <li>
+                        <a class="dropdown-item cat-option d-flex align-items-center gap-2" href="#"
+                           data-value="expense_<?= (int)$cat['id'] ?>"
+                           data-icon="<?= $icon ?>" data-color="<?= $color ?>" data-name="<?= $name ?>">
+                            <i class="<?= $icon ?>" style="color:<?= $color ?>;width:16px"></i>
+                            <span><?= $name ?></span>
+                            <span class="badge ms-auto" style="background:#fee2e2;color:#dc2626;font-size:.65em">Chi</span>
+                        </a>
+                    </li>
+                    <?php endforeach; ?>
+                    <?php if (empty($expenseCats)): ?>
+                    <li><span class="dropdown-item-text text-muted small">Chưa có danh mục chi tiêu</span></li>
+                    <?php endif; ?>
                 <?php endif; ?>
             </ul>
         </div>
-        <div class="form-text text-muted">Chọn Thu nhập = cộng tiền &bull; Chọn Chi tiêu = trừ tiền</div>
     </div>
 
     <div class="mb-3">
@@ -123,7 +125,7 @@ require BASE_PATH . '/app/Views/partials/layout.php';
 
     <div class="mb-4">
         <label class="form-label fw-medium">Ghi chú</label>
-        <textarea name="note" class="form-control" rows="2" maxlength="500"><?= htmlspecialchars($tx['note'] ?? '', ENT_QUOTES) ?></textarea>
+        <textarea name="note" class="form-control" rows="2" maxlength="30"><?= htmlspecialchars($tx['note'] ?? '', ENT_QUOTES) ?></textarea>
     </div>
 
     <div class="d-grid gap-2">
@@ -154,5 +156,25 @@ document.querySelectorAll('.cat-option').forEach(function(item) {
             '<i class="' + icon + ' me-1" style="color:' + color + '"></i>' + name;
         document.getElementById('catDisplay').classList.remove('text-muted');
     });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const displayAmount = document.getElementById('displayAmount');
+    const realAmount = document.getElementById('realAmount');
+
+    if (displayAmount && realAmount) {
+        displayAmount.addEventListener('input', function(e) {
+            // Remove non-digit characters
+            let val = this.value.replace(/\D/g, '');
+            realAmount.value = val;
+            
+            // Format with dots
+            if (val !== '') {
+                this.value = parseInt(val, 10).toLocaleString('vi-VN');
+            } else {
+                this.value = '';
+            }
+        });
+    }
 });
 </script>

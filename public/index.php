@@ -17,6 +17,9 @@
 
 declare(strict_types=1);
 
+// Thiết lập múi giờ mặc định toàn hệ thống là Việt Nam
+date_default_timezone_set('Asia/Ho_Chi_Minh');
+
 define('BASE_PATH', dirname(__DIR__));
 
 // 1. Autoload
@@ -56,13 +59,50 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 // Xử lý path khi chạy trong thư mục con (XAMPP htdocs)
 $scriptName = dirname($_SERVER['SCRIPT_NAME']);
 $scriptName = str_replace('\\', '/', $scriptName);
+if ($scriptName !== '' && !str_starts_with($scriptName, '/')) {
+    $scriptName = '/' . $scriptName;
+}
 if ($scriptName === '/') {
     $scriptName = '';
 }
-define('BASE_URL', $scriptName);
+
+// Xác định thư mục gốc của project (bỏ /public)
+$projectDir = $scriptName === '' ? '' : dirname($scriptName);
+$projectDir = str_replace('\\', '/', $projectDir);
+if ($projectDir !== '' && !str_starts_with($projectDir, '/')) {
+    $projectDir = '/' . $projectDir;
+}
+if ($projectDir === '/' || $projectDir === '.') {
+    $projectDir = '';
+}
+
+// Ưu tiên APP_URL khi host/port khớp request hiện tại, nếu không thì tự động suy ra
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$authority = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$runtimeBaseUrl = $scheme . '://' . $authority . $scriptName;
+
+$configuredBaseUrl = trim($_ENV['APP_URL'] ?? '');
+$configuredAuthority = parse_url($configuredBaseUrl, PHP_URL_HOST);
+$configuredPort = parse_url($configuredBaseUrl, PHP_URL_PORT);
+if ($configuredAuthority) {
+    $configuredAuthority .= $configuredPort ? ':' . $configuredPort : '';
+}
+
+if ($configuredBaseUrl !== '' && $configuredAuthority !== null && strcasecmp($configuredAuthority, $authority) === 0) {
+    define('BASE_URL', rtrim($configuredBaseUrl, '/'));
+} else {
+    define('BASE_URL', rtrim($runtimeBaseUrl, '/'));
+}
 
 if ($scriptName !== '' && str_starts_with($uri, $scriptName)) {
     $uri = substr($uri, strlen($scriptName));
+} elseif ($projectDir !== '' && str_starts_with($uri, $projectDir)) {
+    $uri = substr($uri, strlen($projectDir));
+}
+
+// Bỏ phần /public nếu nó vô tình dính vào (ví dụ /public/login)
+if (str_starts_with($uri, '/public')) {
+    $uri = substr($uri, 7);
 }
 
 if ($uri === '') {

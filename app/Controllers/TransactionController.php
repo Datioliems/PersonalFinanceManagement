@@ -33,27 +33,30 @@ class TransactionController extends BaseController
     {
         $uid         = $this->currentUserId();
         $page        = max(1, (int)($_GET['page'] ?? 1));
-        $filterMonth = $_GET['filter_month'] ?? date('Y-m');
+        
+        $startDate   = $_GET['start_date'] ?? date('Y-m-01');
+        $endDate     = $_GET['end_date'] ?? date('Y-m-t');
+        
         $filterType  = $_GET['filter_type'] ?? '';
         $sort        = $_GET['sort'] ?? 'date_desc';
         $catFilter   = (int)($_GET['category_id'] ?? 0);
 
-        if (!preg_match('/^\d{4}-\d{2}$/', $filterMonth)) $filterMonth = date('Y-m');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) $startDate = date('Y-m-01');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate)) $endDate = date('Y-m-t');
         if (!in_array($filterType, ['income', 'expense', ''], true)) $filterType = '';
 
-        $total = $this->txRepo->countFiltered($uid, $filterType, $filterMonth, $catFilter);
-        $pager = new Paginator($total, 15, $page);
+        $total = $this->txRepo->countFiltered($uid, $filterType, $startDate, $endDate, $catFilter);
+        $pager = new Paginator($total, 10, $page);
         $items = $this->txRepo->findFiltered(
-            $uid, $filterType, $sort, $filterMonth,
+            $uid, $filterType, $sort, $startDate, $endDate,
             $pager->getPerPage(), $pager->getOffset(), $catFilter
         );
 
-        // Tổng thu/chi từng ngày trong tháng đang xem
-        $dailySummary = $this->txRepo->getDailySummary($uid, $filterMonth);
+        // Tổng thu/chi từng ngày trong khoảng thời gian đang xem
+        $dailySummary = $this->txRepo->getDailySummary($uid, $startDate, $endDate);
 
-        // Tổng tháng hiện tại cho stat cards
-        [$mon, $yr] = explode('-', $filterMonth);
-        $summary    = $this->report->generateMonthly((int)$mon, (int)$yr, $uid);
+        // Tổng khoảng thời gian hiện tại cho stat cards
+        $summary = $this->report->generateRange($startDate, $endDate, $uid);
 
         // Danh mục cho dropdown filter
         $cats = $this->catRepo->findByUser($uid);
@@ -61,15 +64,14 @@ class TransactionController extends BaseController
         $this->render('transactions/index', [
             'items'        => $items,
             'pager'        => $pager,
-            'filterMonth'  => $filterMonth,
+            'startDate'    => $startDate,
+            'endDate'      => $endDate,
             'filterType'   => $filterType,
             'sort'         => $sort,
             'catFilter'    => $catFilter,
             'cats'         => $cats,
             'dailySummary' => $dailySummary,
             'summary'      => $summary,
-            'monthNow'     => (int)$mon,
-            'yearNow'      => (int)$yr,
             'pageTitle'    => 'Giao dịch',
         ]);
     }

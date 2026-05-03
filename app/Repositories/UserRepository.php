@@ -38,14 +38,15 @@ class UserRepository extends BaseRepository
     public function save(array $data): int
     {
         $s = $this->db->prepare(
-            'INSERT INTO users (username, email, password_hash, email_verify_token)
-             VALUES (:username, :email, :password_hash, :token)'
+            'INSERT INTO users (username, email, password_hash, email_verify_token, email_verified)
+             VALUES (:username, :email, :password_hash, :token, :email_verified)'
         );
         $s->execute([
-            ':username'      => $data['username'],
-            ':email'         => $data['email'],
-            ':password_hash' => $data['password_hash'],
-            ':token'         => $data['email_verify_token'] ?? null,
+            ':username'         => $data['username'],
+            ':email'            => $data['email'],
+            ':password_hash'    => $data['password_hash'],
+            ':token'            => $data['email_verify_token'] ?? null,
+            ':email_verified'   => $data['email_verified'] ?? 0,
         ]);
         return (int) $this->db->lastInsertId();
     }
