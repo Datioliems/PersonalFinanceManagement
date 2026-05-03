@@ -1,124 +1,147 @@
 <?php
-// ============================================================
-// REPOSITORY — app/Repositories/UserRepository.php
-// ============================================================
-// Toàn bộ SQL liên quan đến bảng users nằm ở đây.
-// Tầng Service gọi Repository — không viết SQL trong Service.
-//
-// TV1 phụ trách — Ngày 2
-// ============================================================
-
 namespace App\Repositories;
 
 class UserRepository extends BaseRepository
 {
-    protected function getTable(): string
-    {
-        return 'users';
-    }
+    protected function getTable(): string { return 'users'; }
 
     // ── READ ──────────────────────────────────────────────────
-
-    /**
-     * Tìm user theo username (dùng khi đăng nhập).
-     * Trả array gồm đủ các cột, hoặc null nếu không tìm thấy.
-     */
     public function findByUsername(string $username): ?array
     {
-        $stmt = $this->db->prepare(
-            'SELECT * FROM users WHERE username = ? LIMIT 1'
-        );
-        $stmt->execute([$username]);
-        return $stmt->fetch() ?: null;
+        $s = $this->db->prepare('SELECT * FROM users WHERE username = ? LIMIT 1');
+        $s->execute([$username]); return $s->fetch() ?: null;
     }
 
-    /**
-     * Tìm user theo email (dùng khi đăng ký để check trùng).
-     */
     public function findByEmail(string $email): ?array
     {
-        $stmt = $this->db->prepare(
-            'SELECT * FROM users WHERE email = ? LIMIT 1'
-        );
-        $stmt->execute([$email]);
-        return $stmt->fetch() ?: null;
+        $s = $this->db->prepare('SELECT * FROM users WHERE email = ? LIMIT 1');
+        $s->execute([$email]); return $s->fetch() ?: null;
     }
 
-    /**
-     * Tìm user theo remember_token (dùng cho Remember Me).
-     * Token lưu trong DB đã được hash SHA-256.
-     */
     public function findByRememberToken(string $hashedToken): ?array
     {
-        $stmt = $this->db->prepare(
-            'SELECT * FROM users
-             WHERE remember_token = ?
-               AND token_expires_at > NOW()
-             LIMIT 1'
+        $s = $this->db->prepare(
+            'SELECT * FROM users WHERE remember_token = ? AND token_expires_at > NOW() AND is_active = 1 LIMIT 1'
         );
-        $stmt->execute([$hashedToken]);
-        return $stmt->fetch() ?: null;
+        $s->execute([$hashedToken]); return $s->fetch() ?: null;
+    }
+
+    public function findByEmailVerifyToken(string $token): ?array
+    {
+        $s = $this->db->prepare(
+            'SELECT * FROM users WHERE email_verify_token = ? AND is_active = 1 LIMIT 1'
+        );
+        $s->execute([$token]); return $s->fetch() ?: null;
     }
 
     // ── WRITE ─────────────────────────────────────────────────
-
-    /**
-     * Tạo user mới. Trả về ID vừa insert.
-     *
-     * @param array $data ['username', 'email', 'password_hash']
-     */
     public function save(array $data): int
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO users (username, email, password_hash)
-             VALUES (:username, :email, :password_hash)'
+        $s = $this->db->prepare(
+            'INSERT INTO users (username, email, password_hash, email_verify_token)
+             VALUES (:username, :email, :password_hash, :token)'
         );
-        $stmt->execute([
+        $s->execute([
             ':username'      => $data['username'],
             ':email'         => $data['email'],
             ':password_hash' => $data['password_hash'],
+            ':token'         => $data['email_verify_token'] ?? null,
         ]);
         return (int) $this->db->lastInsertId();
     }
 
-    /**
-     * Cập nhật remember_token và thời hạn.
-     * Truyền null để xoá token (khi logout).
-     */
+    public function markEmailVerified(int $userId): void
+    {
+        $this->db->prepare('UPDATE users SET email_verified = 1, email_verify_token = NULL WHERE id = ?')
+                 ->execute([$userId]);
+    }
+
+    /** Xoá user chưa verify để cho phép đăng ký lại */
+    public function deleteById(int $userId): void
+    {
+        $this->db->prepare('DELETE FROM users WHERE id = ? AND email_verified = 0')
+                 ->execute([$userId]);
+    }
+
+    public function updatePassword(int $userId, string $hash): void
+    {
+        $this->db->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+                 ->execute([$hash, $userId]);
+    }
+
     public function updateRememberToken(int $userId, ?string $hashedToken, ?\DateTime $expiresAt): void
     {
-        $stmt = $this->db->prepare(
-            'UPDATE users
-             SET remember_token = ?, token_expires_at = ?
+        $this->db->prepare('UPDATE users SET remember_token = ?, token_expires_at = ? WHERE id = ?')
+                 ->execute([$hashedToken, $expiresAt?->format('Y-m-d H:i:s'), $userId]);
+    }
+
+    // ── BRUTE-FORCE ───────────────────────────────────────────
+    public function incrementFailedAttempts(int $userId): void
+    {
+        $this->db->prepare(
+            'UPDATE users SET login_attempts = login_attempts + 1,
+             locked_until = CASE WHEN login_attempts + 1 >= 5
+                 THEN DATE_ADD(NOW(), INTERVAL 60 SECOND) ELSE locked_until END
              WHERE id = ?'
+        )->execute([$userId]);
+    }
+
+    public function resetFailedAttempts(int $userId): void
+    {
+        $this->db->prepare('UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?')
+                 ->execute([$userId]);
+    }
+
+    public function getLockedSeconds(int $userId): int
+    {
+        $s = $this->db->prepare(
+            'SELECT GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), locked_until)) AS secs FROM users WHERE id = ?'
         );
-        $stmt->execute([
-            $hashedToken,
-            $expiresAt?->format('Y-m-d H:i:s'),
-            $userId,
-        ]);
+        $s->execute([$userId]);
+        return (int)($s->fetch()['secs'] ?? 0);
+    }
+
+    // ── PASSWORD RESET ────────────────────────────────────────
+    public function savePasswordResetToken(int $userId, string $tokenHash): void
+    {
+        $this->db->prepare('UPDATE password_resets SET used = 1 WHERE user_id = ? AND used = 0')
+                 ->execute([$userId]);
+        $this->db->prepare(
+            'INSERT INTO password_resets (user_id, token_hash, expires_at)
+             VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE))'
+        )->execute([$userId, $tokenHash]);
+    }
+
+    public function findValidResetToken(string $tokenHash): ?array
+    {
+        $s = $this->db->prepare(
+            'SELECT pr.*, u.email, u.username FROM password_resets pr JOIN users u ON pr.user_id = u.id
+             WHERE pr.token_hash = ? AND pr.used = 0 AND pr.expires_at > NOW() LIMIT 1'
+        );
+        $s->execute([$tokenHash]); return $s->fetch() ?: null;
+    }
+
+    public function markResetTokenUsed(string $tokenHash): void
+    {
+        $this->db->prepare('UPDATE password_resets SET used = 1 WHERE token_hash = ?')
+                 ->execute([$tokenHash]);
     }
 
     // ── LOGIN LOGS ────────────────────────────────────────────
-
-    /**
-     * Ghi log đăng nhập vào bảng login_logs.
-     *
-     * @param int|null $userId null nếu username không tồn tại
-     * @param string   $username  username đã nhập
-     * @param string   $ip        IP address
-     * @param string   $status    'success' | 'failed'
-     */
     public function logLogin(?int $userId, string $username, string $ip, string $status): void
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO login_logs (user_id, ip_address, status)
-             VALUES (:user_id, :ip, :status)'
+        $this->db->prepare(
+            'INSERT INTO login_logs (user_id, username, ip_address, status) VALUES (?,?,?,?)'
+        )->execute([$userId, $username, $ip, $status]);
+    }
+
+    public function countRecentFailsByIp(string $ip, int $minutes = 15): int
+    {
+        $s = $this->db->prepare(
+            "SELECT COUNT(*) FROM login_logs WHERE ip_address = ? AND status = 'failed'
+             AND created_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)"
         );
-        $stmt->execute([
-            ':user_id'  => $userId,
-            ':ip'       => $ip,
-            ':status'   => $status,
-        ]);
+        $s->execute([$ip, $minutes]);
+        return (int) $s->fetchColumn();
     }
 }

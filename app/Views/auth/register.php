@@ -2,10 +2,13 @@
 // ============================================================
 // VIEW — app/Views/auth/register.php
 // ============================================================
-// Biến nhận từ AuthController::showRegister():
-//   $csrf — CSRF token (string)
-// ============================================================
+/** @var string $csrf */
+/** @var array  $old         — ['username','email'] khôi phục sau lỗi */
+/** @var array  $fieldErrors — ['username'=>[...],'email'=>[...],...] */
+$old         = $old         ?? [];
+$fieldErrors = $fieldErrors ?? [];
 $pageTitle = 'Đăng ký tài khoản';
+$extraCss  = BASE_URL . '/css/auth.css';
 require BASE_PATH . '/app/Views/partials/layout.php';
 ?>
 
@@ -41,7 +44,7 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                                 <i class="bi bi-person text-muted"></i>
                             </span>
                             <input type="text"
-                                   class="form-control"
+                                   class="form-control <?= isset($fieldErrors['username']) ? 'is-invalid' : '' ?>"
                                    id="username"
                                    name="username"
                                    required
@@ -50,7 +53,10 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                                    maxlength="50"
                                    pattern="[a-zA-Z0-9_]+"
                                    placeholder="Tối thiểu 3 ký tự, chỉ a-z, 0-9, _"
-                                   value="<?= htmlspecialchars($_POST['username'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                   value="<?= htmlspecialchars($old['username'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                            <?php if (!empty($fieldErrors['username'])): ?>
+                                <div class="invalid-feedback"><?= htmlspecialchars(implode(' ', $fieldErrors['username'])) ?></div>
+                            <?php endif; ?>
                         </div>
                         <div class="form-text">Chỉ chữ cái, số và dấu gạch dưới (_)</div>
                     </div>
@@ -65,13 +71,16 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                                 <i class="bi bi-envelope text-muted"></i>
                             </span>
                             <input type="email"
-                                   class="form-control"
+                                   class="form-control <?= isset($fieldErrors['email']) ? 'is-invalid' : '' ?>"
                                    id="email"
                                    name="email"
                                    required
                                    autocomplete="email"
                                    placeholder="example@gmail.com"
-                                   value="<?= htmlspecialchars($_POST['email'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                   value="<?= htmlspecialchars($old['email'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                            <?php if (!empty($fieldErrors['email'])): ?>
+                                <div class="invalid-feedback"><?= htmlspecialchars(implode(' ', $fieldErrors['email'])) ?></div>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -85,13 +94,13 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                                 <i class="bi bi-lock text-muted"></i>
                             </span>
                             <input type="password"
-                                   class="form-control"
+                                   class="form-control <?= isset($fieldErrors['password']) ? 'is-invalid' : '' ?>"
                                    id="password"
                                    name="password"
                                    required
                                    minlength="8"
                                    autocomplete="new-password"
-                                   placeholder="Ít nhất 8 ký tự"
+                                   placeholder="Ít nhất 8 ký tự, 1 HOA, 1 số"
                                    oninput="checkPasswordStrength(this.value)">
                             <button type="button"
                                     class="btn btn-outline-secondary"
@@ -99,6 +108,9 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                                     tabindex="-1">
                                 <i class="bi bi-eye"></i>
                             </button>
+                            <?php if (!empty($fieldErrors['password'])): ?>
+                                <div class="invalid-feedback"><?= htmlspecialchars(implode(' ', $fieldErrors['password'])) ?></div>
+                            <?php endif; ?>
                         </div>
                         <!-- Thanh độ mạnh mật khẩu -->
                         <div class="mt-2">
@@ -121,13 +133,16 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                                 <i class="bi bi-lock-fill text-muted"></i>
                             </span>
                             <input type="password"
-                                   class="form-control"
+                                   class="form-control <?= isset($fieldErrors['confirm']) ? 'is-invalid' : '' ?>"
                                    id="password_confirm"
                                    name="password_confirm"
                                    required
                                    minlength="8"
                                    autocomplete="new-password"
                                    placeholder="Nhập lại mật khẩu">
+                            <?php if (!empty($fieldErrors['confirm'])): ?>
+                                <div class="invalid-feedback"><?= htmlspecialchars(implode(' ', $fieldErrors['confirm'])) ?></div>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -192,10 +207,19 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     const pw2 = document.getElementById('password_confirm').value;
     if (pw !== pw2) {
         e.preventDefault();
-        alert('Hai mật khẩu không khớp nhau!');
-        document.getElementById('password_confirm').focus();
+        const confirmInput = document.getElementById('password_confirm');
+        confirmInput.classList.add('is-invalid');
+        let fb = confirmInput.closest('.input-group').querySelector('.invalid-feedback');
+        if (!fb) {
+            fb = document.createElement('div');
+            fb.className = 'invalid-feedback';
+            confirmInput.closest('.input-group').appendChild(fb);
+        }
+        fb.textContent = 'Hai mật khẩu không khớp nhau!';
+        confirmInput.focus();
     }
 });
 </script>
 
 <?php require BASE_PATH . '/app/Views/partials/footer.php'; ?>
+

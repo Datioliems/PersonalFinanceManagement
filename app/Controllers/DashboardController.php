@@ -1,13 +1,4 @@
 <?php
-// ============================================================
-// CONTROLLER — app/Controllers/DashboardController.php
-// ============================================================
-// TV5 viết — Ngày 4
-//
-// Tổng hợp dữ liệu cho trang chủ sau khi đăng nhập.
-// Dùng ReportService để lấy data — không query DB trực tiếp.
-// ============================================================
-
 namespace App\Controllers;
 
 use App\Services\{ReportService, FinanceReport};
@@ -25,42 +16,81 @@ class DashboardController extends BaseController
         $this->financeReport = new FinanceReport($txRepo);
     }
 
-    // ── GET /dashboard ────────────────────────────────────────
-    /**
-     * Dashboard chính — tổng quan + 2 biểu đồ Chart.js.
-     *
-     * Data truyền vào Chart.js qua json_encode() thay vì AJAX
-     * vì đơn giản hơn và không cần thêm API endpoint.
-     * json_encode() với JSON_UNESCAPED_UNICODE để tiếng Việt đúng.
-     */
     public function index(): void
     {
         $uid   = $this->currentUserId();
         $month = (int)date('n');
         $year  = (int)date('Y');
 
-        // Tổng thu/chi tháng này
-        $summary = $this->reportService->getSummaryByMonth($month, $year, $uid);
+        $monthStart = date('Y-m-01');
+        $monthEnd   = date('Y-m-t');
 
-        // Data cho biểu đồ tròn (chi theo danh mục)
-        $donutData = $this->reportService->getByCategory($month, $year, $uid);
+        // Tổng thu/chi tháng này (kỳ cố định = tháng hiện tại)
+        $summary = $this->reportService->getSummaryByRange($monthStart, $monthEnd, $uid);
+
+        // Số dư ví lũy kế đến cuối tháng hiện tại
+        $walletBalance = $this->reportService->getWalletBalance($monthEnd, $uid);
 
         // Data cho biểu đồ cột (4 tuần gần nhất)
         $barData = $this->reportService->getTrend(4, $uid);
 
-        // Encode JSON một lần — tránh gọi json_encode nhiều lần trong View
-        $chartJson = json_encode(
-            ['donut' => $donutData, 'bar' => $barData],
-            JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
-        );
+        // Biểu đồ tròn thu nhập theo tháng hiện tại
+        $incomeDonut  = $this->reportService->getByCategoryByRange($monthStart, $monthEnd, $uid, 'income');
+        // Biểu đồ tròn chi tiêu theo tháng hiện tại
+        $expenseDonut = $this->reportService->getByCategoryByRange($monthStart, $monthEnd, $uid, 'expense');
+
+        $chartJson = json_encode([
+            'bar'          => $barData,
+            'incomeDonut'  => $incomeDonut,
+            'expenseDonut' => $expenseDonut,
+        ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
 
         $this->render('dashboard/index', [
-            'summary'   => $summary,
-            'chartJson' => $chartJson,
-            'month'     => $month,
-            'year'      => $year,
-            'pageTitle' => 'Dashboard',
-            'needChartJs' => true,
+            'summary'       => $summary,
+            'walletBalance' => $walletBalance,
+            'chartJson'     => $chartJson,
+            'month'         => $month,
+            'year'          => $year,
+            'pageTitle'     => 'Dashboard',
+            'needChartJs'   => true,
         ]);
+    }
+
+    /** Xuất CSV tháng hiện tại */
+    public function export(): void
+    {
+        $uid = $this->currentUserId();
+        $df  = date('Y-m-01');
+        $dt  = date('Y-m-t');
+        $this->financeReport->exportCsvDashboard($df, $dt, $uid);
+        exit;
+    }
+
+    /**
+     * AJAX: giao dịch theo category + kỳ (dùng cho donut popup trên dashboard).
+     * Kỳ cố định = tháng hiện tại.
+     */
+    public function transactions(): void
+    {
+        $uid        = $this->currentUserId();
+        $categoryId = (int)($_GET['category_id'] ?? 0);
+        $type       = in_array($_GET['type'] ?? '', ['income','expense'], true) ? $_GET['type'] : '';
+        $df         = date('Y-m-01');
+        $dt         = date('Y-m-t');
+
+        $txRepo = new TransactionRepository();
+        $rows   = $txRepo->findFiltered($uid, $type, 'date_desc', $df, $dt, 200, 0, $categoryId);
+
+        $out = array_map(fn($r) => [
+            'date'          => date('d/m/Y', strtotime($r['trans_date'])),
+            'category_name' => $r['category_name'],
+            'amount'        => (float)$r['amount'],
+            'type'          => $r['type'],
+            'note'          => $r['note'] ?? '',
+        ], $rows);
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($out, JSON_UNESCAPED_UNICODE);
+        exit;
     }
 }
