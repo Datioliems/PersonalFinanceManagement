@@ -58,6 +58,19 @@ class CategoryRepository extends BaseRepository
         return $stmt->fetch() ?: null;
     }
 
+    /**
+     * Tìm theo màu (check trùng khi tạo mới/cập nhật).
+     */
+    public function findByColorAndUser(string $color, int $userId): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM categories
+             WHERE color = ? AND user_id = ? LIMIT 1'
+        );
+        $stmt->execute([$color, $userId]);
+        return $stmt->fetch() ?: null;
+    }
+
     // ── WRITE ─────────────────────────────────────────────────
 
     /**

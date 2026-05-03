@@ -78,6 +78,15 @@ class CategoryController extends BaseController
             $this->redirect($returnUrl);
         }
 
+        // Kiểm tra trùng màu
+        if ($color) {
+            $existingColor = $this->catRepo->findByColorAndUser($color, $uid);
+            if ($existingColor) {
+                FlashMessage::set('warning', "Màu sắc này đã được sử dụng cho danh mục \"{$existingColor['name']}\". Vui lòng chọn màu khác.");
+                $this->redirect($returnUrl);
+            }
+        }
+
         $this->catRepo->save([
             'user_id' => $uid,
             'name'    => $name,
@@ -145,6 +154,15 @@ class CategoryController extends BaseController
         if ($existing && (int)$existing['id'] !== (int)$id) {
             FlashMessage::set('warning', "Danh mục \"{$name}\" đã tồn tại.");
             $this->redirect("/categories/{$id}/edit");
+        }
+
+        // Kiểm tra trùng màu (trừ chính nó)
+        if ($color) {
+            $existingColor = $this->catRepo->findByColorAndUser($color, $uid);
+            if ($existingColor && (int)$existingColor['id'] !== (int)$id) {
+                FlashMessage::set('warning', "Màu sắc này đã được sử dụng cho danh mục \"{$existingColor['name']}\". Vui lòng chọn màu khác.");
+                $this->redirect("/categories/{$id}/edit");
+            }
         }
 
         $updated = $this->catRepo->update((int)$id, $uid, [

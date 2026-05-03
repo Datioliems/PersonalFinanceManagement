@@ -61,6 +61,12 @@ class TransactionController extends BaseController
         // Danh mục cho dropdown filter
         $cats = $this->catRepo->findByUser($uid);
 
+        // Lấy danh sách ngân sách bị vượt
+        $budgetRepo = new \App\Repositories\BudgetRepository();
+        $budgetService = new \App\Services\BudgetService($budgetRepo, $this->txRepo);
+        $budgetSummary = $budgetService->getBudgetSummary($uid, (int)date('m'), (int)date('Y'));
+        $overBudgets = array_filter($budgetSummary, fn($b) => $b['is_exceeded']);
+
         $this->render('transactions/index', [
             'items'        => $items,
             'pager'        => $pager,
@@ -72,6 +78,7 @@ class TransactionController extends BaseController
             'cats'         => $cats,
             'dailySummary' => $dailySummary,
             'summary'      => $summary,
+            'overBudgets'  => $overBudgets,
             'pageTitle'    => 'Giao dịch',
         ]);
     }

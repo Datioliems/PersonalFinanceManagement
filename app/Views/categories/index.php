@@ -36,52 +36,67 @@ require BASE_PATH . '/app/Views/partials/layout.php';
 </div>
 
 <?php else: ?>
-<div class="cat-grid" id="catGrid">
-    <?php foreach ($cats as $cat):
-        $color      = htmlspecialchars($cat['color'] ?? '#6366f1', ENT_QUOTES);
-        $icon       = htmlspecialchars($cat['icon']  ?? 'bi-tag',  ENT_QUOTES);
-        $name       = htmlspecialchars($cat['name'],                ENT_QUOTES);
-        $colorBg    = $color . '1e';   // opacity 12% dạng hex
-        [$badgeClass, $badgeLabel] = match($cat['type']) {
-            'income'  => ['cat-badge-income',  'Thu nhập'],
-            'expense' => ['cat-badge-expense', 'Chi tiêu'],
-            default   => ['cat-badge-both',    'Cả hai'],
-        };
+<?php
+$incomeCats = array_filter($cats, fn($c) => $c['type'] === 'income');
+$expenseCats = array_filter($cats, fn($c) => $c['type'] === 'expense');
+$bothCats = array_filter($cats, fn($c) => $c['type'] === 'both');
+
+function renderCatCard($cat, $csrf) {
+    $color      = htmlspecialchars($cat['color'] ?? '#6366f1', ENT_QUOTES);
+    $icon       = htmlspecialchars($cat['icon']  ?? 'bi-tag',  ENT_QUOTES);
+    $name       = htmlspecialchars($cat['name'],                ENT_QUOTES);
+    $colorBg    = $color . '1e';
+    [$badgeClass, $badgeLabel] = match($cat['type']) {
+        'income'  => ['cat-badge-income',  'Thu nhập'],
+        'expense' => ['cat-badge-expense', 'Chi tiêu'],
+        default   => ['cat-badge-both',    'Cả hai'],
+    };
     ?>
     <div class="cat-card" style="--cat-color:<?= $color ?>; --cat-color-bg:<?= $colorBg ?>">
-
-        <!-- Icon -->
-        <div class="cat-icon-wrap">
-            <i class="<?= $icon ?>"></i>
-        </div>
-
-        <!-- Tên + loại -->
+        <div class="cat-icon-wrap"><i class="<?= $icon ?>"></i></div>
         <div class="cat-info">
             <div class="cat-name" title="<?= $name ?>"><?= $name ?></div>
             <span class="cat-badge <?= $badgeClass ?>"><?= $badgeLabel ?></span>
         </div>
-
-        <!-- Nút sửa / xóa (xuất hiện khi hover) -->
         <div class="cat-actions">
-            <a href="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/edit"
-               class="cat-btn cat-btn-edit" title="Sửa">
-                <i class="bi bi-pencil"></i>
-            </a>
-            <form method="POST"
-                  action="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/delete"
-                  class="m-0">
-                <input type="hidden" name="csrf_token"
-                       value="<?= htmlspecialchars($csrf ?? '', ENT_QUOTES) ?>">
-                <button type="submit"
-                        class="cat-btn cat-btn-del"
-                        title="Xoá"
-                        data-confirm="Xoá danh mục '<?= $name ?>'?">
-                    <i class="bi bi-trash3"></i>
-                </button>
+            <a href="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/edit" class="cat-btn cat-btn-edit" title="Sửa"><i class="bi bi-pencil"></i></a>
+            <form method="POST" action="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/delete" class="m-0">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf ?? '', ENT_QUOTES) ?>">
+                <button type="submit" class="cat-btn cat-btn-del" title="Xoá" data-confirm="Xoá danh mục '<?= $name ?>'?"><i class="bi bi-trash3"></i></button>
             </form>
         </div>
     </div>
-    <?php endforeach; ?>
+    <?php
+}
+?>
+
+<div class="row g-4" id="catGrid">
+    <div class="col-12 col-md-6">
+        <h4 class="h5 fw-semibold mb-3 text-danger"><i class="bi bi-arrow-up-circle me-2"></i>Danh mục Chi tiêu</h4>
+        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+            <?php foreach ($expenseCats as $cat) renderCatCard($cat, $csrf); ?>
+            <?php if (empty($expenseCats)): ?>
+                <div class="text-muted small">Chưa có danh mục chi tiêu nào.</div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <h4 class="h5 fw-semibold mb-3 text-success"><i class="bi bi-arrow-down-circle me-2"></i>Danh mục Thu nhập</h4>
+        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+            <?php foreach ($incomeCats as $cat) renderCatCard($cat, $csrf); ?>
+            <?php if (empty($incomeCats)): ?>
+                <div class="text-muted small">Chưa có danh mục thu nhập nào.</div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php if (!empty($bothCats)): ?>
+    <div class="col-12">
+        <h4 class="h5 fw-semibold mb-3 text-primary"><i class="bi bi-arrow-left-right me-2"></i>Danh mục Cả hai</h4>
+        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+            <?php foreach ($bothCats as $cat) renderCatCard($cat, $csrf); ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 <?php endif; ?>
 
