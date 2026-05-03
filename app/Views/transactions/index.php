@@ -272,7 +272,7 @@ $periodLabel = date('d/m/Y', strtotime($startDate)) . ' – ' . date('d/m/Y', st
             <table class="table table-sm mb-0 small">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-3">Ngày</th>
+                        <th class="text-center">Ngày</th>
                         <th class="text-center">Số Giao Dịch</th>
                         <th class="text-center text-success">Thu</th>
                         <th class="text-center text-danger">Chi</th>
@@ -282,7 +282,7 @@ $periodLabel = date('d/m/Y', strtotime($startDate)) . ' – ' . date('d/m/Y', st
                 <tbody>
                 <?php foreach ($dailySummary as $d): $bal = (float)$d['balance']; ?>
                 <tr>
-                    <td class="ps-3"><a href="<?= BASE_URL ?>/transactions?start_date=<?= $d['trans_date'] ?>&end_date=<?= $d['trans_date'] ?>" class="text-decoration-none fw-medium"><?= htmlspecialchars($d['trans_date']) ?></a></td>
+                    <td class="text-center"><a href="<?= BASE_URL ?>/transactions?start_date=<?= $d['trans_date'] ?>&end_date=<?= $d['trans_date'] ?>" class="text-decoration-none fw-medium"><?= htmlspecialchars($d['trans_date']) ?></a></td>
                     <td class="text-center text-muted small"><?= $d['total_tx'] ?></td>
                     <td class="text-center text-success"><?= $d['income']  > 0 ? '+'.number_format($d['income'], 0,',','.').'đ'  : '—' ?></td>
                     <td class="text-center text-danger"> <?= $d['expense'] > 0 ? '-'.number_format($d['expense'],0,',','.').'đ' : '—' ?></td>

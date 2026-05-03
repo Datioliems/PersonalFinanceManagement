@@ -53,6 +53,25 @@
     transform: translateX(3px);
 }
 
+/* ── Quick-select buttons (bỏ border, hover tím) ─────────── */
+.rp-quick-btn {
+    display: block;
+    width: 100%;
+    padding: .3rem .6rem;
+    font-size: .8rem;
+    color: #374151;
+    text-align: left;
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, color .15s, transform .1s;
+}
+.rp-quick-btn:hover  { background: #ede9fe; color: #6d28d9; transform: translateX(2px); }
+.rp-quick-btn.active { background: #ede9fe; color: #6d28d9; font-weight: 600; }
+
 /* ── Form select smooth hover inside filter bar ──────────── */
 .tx-filter-card .form-select.shadow-none {
     transition: border-color .2s, box-shadow .25s;
