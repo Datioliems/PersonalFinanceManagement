@@ -25,6 +25,8 @@
     align-items: center;
     height: 60px;
     gap: .5rem;
+    justify-content: space-between;
+    position: relative;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -75,10 +77,13 @@
 .nav-menu {
     display: flex;
     align-items: center;
-    gap: .15rem;
+    gap: .25rem;
     list-style: none;
     margin: 0; padding: 0;
-    flex: 1;
+    /* Center menu absolutely in the header */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .nav-menu .nav-item { position: relative; }

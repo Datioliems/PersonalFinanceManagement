@@ -31,14 +31,37 @@ class CategoryController extends BaseController
      */
     public function index(): void
     {
-        $uid  = $this->currentUserId();
-        $cats = $this->catRepo->findByUser($uid);
+        $uid     = $this->currentUserId();
+        $page    = max(1, (int)($_GET['page'] ?? 1));
+        $perPage = 8;
+
+        // Lấy toàn bộ danh mục, chia nhóm theo type
+        $allCats     = $this->catRepo->findByUser($uid);
+        $expenseCats = array_values(array_filter($allCats, fn($c) => $c['type'] === 'expense'));
+        $incomeCats  = array_values(array_filter($allCats, fn($c) => $c['type'] === 'income'));
+        $bothCats    = array_values(array_filter($allCats, fn($c) => $c['type'] === 'both'));
+
+        // Paginate từng nhóm với cùng offset
+        $offset           = ($page - 1) * $perPage;
+        $pagedExpense     = array_slice($expenseCats, $offset, $perPage);
+        $pagedIncome      = array_slice($incomeCats,  $offset, $perPage);
+        $pagedBoth        = array_slice($bothCats,    $offset, $perPage);
+
+        // Tổng trang = max của các nhóm (nhóm nào nhiều hơn thì quyết định số trang)
+        $maxTotal = max(count($expenseCats), count($incomeCats), count($bothCats), 1);
+        $pager    = new \App\Helpers\Paginator($maxTotal, $perPage, $page);
+
         $csrf = CsrfTokenManager::generate();
 
         $this->render('categories/index', [
-            'cats'      => $cats,
-            'csrf'      => $csrf,
-            'pageTitle' => 'Danh mục',
+            'cats'         => $allCats,        // full list (dùng cho dropdown khi cần)
+            'expenseCats'  => $pagedExpense,
+            'incomeCats'   => $pagedIncome,
+            'bothCats'     => $pagedBoth,
+            'hasAny'       => !empty($allCats),
+            'pager'        => $pager,
+            'csrf'         => $csrf,
+            'pageTitle'    => 'Danh mục',
         ]);
     }
 
@@ -59,7 +82,6 @@ class CategoryController extends BaseController
         $name  = trim($_POST['name']  ?? '');
         $type  = $_POST['type']        ?? 'expense';
         $icon  = trim($_POST['icon']  ?? '') ?: null;
-        $color = trim($_POST['color'] ?? '') ?: null;
         $uid   = $this->currentUserId();
 
         // Validate
@@ -78,14 +100,28 @@ class CategoryController extends BaseController
             $this->redirect($returnUrl);
         }
 
-        // Kiểm tra trùng màu
-        if ($color) {
-            $existingColor = $this->catRepo->findByColorAndUser($color, $uid);
-            if ($existingColor) {
-                FlashMessage::set('warning', "Màu sắc này đã được sử dụng cho danh mục \"{$existingColor['name']}\". Vui lòng chọn màu khác.");
-                $this->redirect($returnUrl);
-            }
-        }
+        // Auto-random màu — 12 màu cách nhau ~30° trên vòng màu, mỗi màu 1 nhóm sắc riêng biệt
+        $palette = [
+            '#dc2626', // Đỏ           (0°)
+            '#ea580c', // Cam           (22°)
+            '#ca8a04', // Vàng hổ phách (45°)
+            '#65a30d', // Xanh neon     (80°)
+            '#16a34a', // Xanh lá       (142°)
+            '#0d9488', // Xanh ngọc     (177°)
+            '#0284c7', // Xanh trời     (204°)
+            '#1d4ed8', // Xanh dương    (224°)
+            '#6d28d9', // Tím đậm       (263°)
+            '#a21caf', // Tím hồng      (289°)
+            '#be185d', // Hồng đậm      (328°)
+            '#9f1239', // Đỏ hoa hồng   (345°)
+        ];
+        $existingCats  = $this->catRepo->findByUser($uid);
+        $usedColors    = array_column($existingCats, 'color');
+        $availColors   = array_values(array_diff($palette, $usedColors));
+        // Nếu hết màu mới thì dùng lại palette từ đầu
+        $color = count($availColors) > 0
+            ? $availColors[array_rand($availColors)]
+            : $palette[array_rand($palette)];
 
         $this->catRepo->save([
             'user_id' => $uid,

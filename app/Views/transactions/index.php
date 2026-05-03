@@ -22,59 +22,52 @@ require BASE_PATH . '/app/Views/partials/layout.php';
 $periodLabel = date('d/m/Y', strtotime($startDate)) . ' – ' . date('d/m/Y', strtotime($endDate));
 ?>
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/report.css">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/dashboard.css">
 
 <div class="row g-3 mb-4">
     <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card border-0 h-100" style="background:#f0fdf4">
-            <div class="card-body">
-                <div class="small text-muted mb-1">
-                    <i class="bi bi-arrow-down-circle me-1 text-success"></i>Tổng thu nhập
-                </div>
-                <div class="h3 fw-semibold text-success mb-0">
-                    +<?= number_format($summary['income'] ?? 0, 0, ',', '.') ?>đ
-                </div>
-                <div class="small text-muted mt-1"><?= $periodLabel ?></div>
+        <div class="stat-card income-card">
+            <div class="stat-label">
+                <i class="bi bi-arrow-down-circle text-success"></i> Tổng thu nhập
             </div>
+            <div class="stat-value text-success">
+                +<?= number_format($summary['income'] ?? 0, 0, ',', '.') ?>đ
+            </div>
+            <div class="stat-period"><?= $periodLabel ?></div>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card border-0 h-100" style="background:#fef2f2">
-            <div class="card-body">
-                <div class="small text-muted mb-1">
-                    <i class="bi bi-arrow-up-circle me-1 text-danger"></i>Tổng chi tiêu
-                </div>
-                <div class="h3 fw-semibold text-danger mb-0">
-                    -<?= number_format($summary['expense'] ?? 0, 0, ',', '.') ?>đ
-                </div>
-                <div class="small text-muted mt-1"><?= $periodLabel ?></div>
+        <div class="stat-card expense-card">
+            <div class="stat-label">
+                <i class="bi bi-arrow-up-circle text-danger"></i> Tổng chi tiêu
             </div>
+            <div class="stat-value text-danger">
+                -<?= number_format($summary['expense'] ?? 0, 0, ',', '.') ?>đ
+            </div>
+            <div class="stat-period"><?= $periodLabel ?></div>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-lg-3">
         <?php $bal = $summary['balance'] ?? 0; $balPositive = $bal >= 0; ?>
-        <div class="card border-0 h-100" style="background:<?= $balPositive ? '#eff6ff' : '#fef2f2' ?>">
-            <div class="card-body">
-                <div class="small text-muted mb-1">
-                    <i class="bi bi-wallet2 me-1 <?= $balPositive ? 'text-primary' : 'text-danger' ?>"></i>Chênh lệch
-                </div>
-                <div class="h3 fw-semibold mb-0 <?= $balPositive ? 'text-primary' : 'text-danger' ?>">
-                    <?= ($balPositive ? '+' : '') . number_format($bal, 0, ',', '.') ?>đ
-                </div>
-                <div class="small text-muted mt-1"><?= $periodLabel ?></div>
+        <div class="stat-card <?= $balPositive ? 'balance-card-positive' : 'balance-card-negative' ?>">
+            <div class="stat-label">
+                <i class="bi bi-wallet2 <?= $balPositive ? 'text-primary' : 'text-danger' ?>"></i> Chênh lệch
             </div>
+            <div class="stat-value <?= $balPositive ? 'text-primary' : 'text-danger' ?>">
+                <?= ($balPositive ? '+' : '') . number_format($bal, 0, ',', '.') ?>đ
+            </div>
+            <div class="stat-period"><?= $periodLabel ?></div>
         </div>
     </div>
     <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card border-0 h-100" style="background:#f8fafc">
-            <div class="card-body">
-                <div class="small text-muted mb-1">
-                    <i class="bi bi-list-ul me-1 text-secondary"></i>Số giao dịch
-                </div>
-                <div class="h3 fw-semibold text-dark mb-0">
-                    <?= number_format($pager->getTotal(), 0, ',', '.') ?>
-                </div>
-                <div class="small text-muted mt-1"><?= $periodLabel ?></div>
+        <div class="stat-card" style="background:#f8fafc">
+            <div class="stat-label">
+                <i class="bi bi-list-ul text-secondary"></i> Số giao dịch
             </div>
+            <div class="stat-value text-dark">
+                <?= number_format($pager->getTotal(), 0, ',', '.') ?>
+            </div>
+            <div class="stat-period"><?= $periodLabel ?></div>
         </div>
     </div>
 </div>
@@ -111,8 +104,9 @@ $periodLabel = date('d/m/Y', strtotime($startDate)) . ' – ' . date('d/m/Y', st
         <div class="row g-2 align-items-end">
             <div class="col-12 col-sm-auto" style="min-width: 240px;">
                 <label class="form-label small text-muted mb-1">Thời gian</label>
-                <div class="rp-bar w-100" id="rpTrigger" style="cursor:pointer; background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:3px 12px; display:flex; align-items:center; justify-content:space-between; height: 31px;">
-                    <span id="dateRangeDisplay" style="font-size: 0.875rem;"><i class="bi bi-calendar3 me-1"></i> <?= htmlspecialchars($periodLabel) ?></span>
+                <div class="rp-bar w-100" id="rpTrigger">
+                    <i class="bi bi-calendar3 me-2 text-muted"></i>
+                    <span id="dateRangeDisplay"><?= htmlspecialchars($periodLabel) ?></span>
                 </div>
                 <input type="hidden" name="start_date" id="startDateInput" value="<?= htmlspecialchars($startDate ?? '', ENT_QUOTES) ?>">
                 <input type="hidden" name="end_date" id="endDateInput" value="<?= htmlspecialchars($endDate ?? '', ENT_QUOTES) ?>">
@@ -226,10 +220,12 @@ $periodLabel = date('d/m/Y', strtotime($startDate)) . ' – ' . date('d/m/Y', st
                 </div>
             </div>
             <div class="col-12 col-sm-auto d-flex gap-2">
-                <button type="submit" class="btn btn-sm btn-outline-dark">
+                <button type="submit" class="btn btn-sm btn-primary">
                     <i class="bi bi-funnel me-1"></i>Lọc
                 </button>
-                <a href="<?= BASE_URL ?>/transactions" class="btn btn-sm btn-outline-secondary">Xoá lọc</a>
+                <a href="<?= BASE_URL ?>/transactions" class="btn btn-sm btn-primary" style="opacity:.75;">
+                    <i class="bi bi-x-circle me-1"></i>Xoá lọc
+                </a>
             </div>
         </div>
     </div>
@@ -275,16 +271,22 @@ $periodLabel = date('d/m/Y', strtotime($startDate)) . ' – ' . date('d/m/Y', st
         <div class="table-responsive">
             <table class="table table-sm mb-0 small">
                 <thead class="table-light">
-                    <tr><th class="ps-3">Ngày</th><th class="text-center">Số GD</th><th class="text-end text-success">Thu</th><th class="text-end text-danger">Chi</th><th class="text-end">Số dư ngày</th></tr>
+                    <tr>
+                        <th class="ps-3">Ngày</th>
+                        <th class="text-center">Số Giao Dịch</th>
+                        <th class="text-center text-success">Thu</th>
+                        <th class="text-center text-danger">Chi</th>
+                        <th class="text-center">Chênh lệch</th>
+                    </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($dailySummary as $d): $bal = (float)$d['balance']; ?>
                 <tr>
                     <td class="ps-3"><a href="<?= BASE_URL ?>/transactions?start_date=<?= $d['trans_date'] ?>&end_date=<?= $d['trans_date'] ?>" class="text-decoration-none fw-medium"><?= htmlspecialchars($d['trans_date']) ?></a></td>
                     <td class="text-center text-muted small"><?= $d['total_tx'] ?></td>
-                    <td class="text-end text-success"><?= $d['income']  > 0 ? '+'.number_format($d['income'], 0,',','.').'đ'  : '—' ?></td>
-                    <td class="text-end text-danger"> <?= $d['expense'] > 0 ? '-'.number_format($d['expense'],0,',','.').'đ' : '—' ?></td>
-                    <td class="text-end fw-medium <?= $bal >= 0 ? 'text-success' : 'text-danger' ?>">
+                    <td class="text-center text-success"><?= $d['income']  > 0 ? '+'.number_format($d['income'], 0,',','.').'đ'  : '—' ?></td>
+                    <td class="text-center text-danger"> <?= $d['expense'] > 0 ? '-'.number_format($d['expense'],0,',','.').'đ' : '—' ?></td>
+                    <td class="text-center fw-medium <?= $bal >= 0 ? 'text-success' : 'text-danger' ?>">
                         <?= ($bal >= 0 ? '+' : '').number_format($bal, 0, ',', '.') ?>đ
                     </td>
                 </tr>
@@ -307,10 +309,11 @@ $periodLabel = date('d/m/Y', strtotime($startDate)) . ' – ' . date('d/m/Y', st
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-3">Ngày</th>
-                    <th>Danh mục</th>
-                    <th class="text-end">Số tiền</th>
-                    <th>Ghi chú</th>
+                    <th class="ps-3 text-center">Ngày</th>
+                    <th class="text-center">Loại</th>
+                    <th class="text-center">Danh mục</th>
+                    <th class="text-center">Số tiền</th>
+                    <th class="text-center">Ghi chú</th>
                     <th class="text-center">Thao tác</th>
                 </tr>
             </thead>
@@ -324,27 +327,29 @@ $periodLabel = date('d/m/Y', strtotime($startDate)) . ' – ' . date('d/m/Y', st
                 $amountPrefix = $isIncome ? '+' : '-';
             ?>
             <tr>
-                <td class="ps-3 text-nowrap text-muted small">
+                <td class="text-center text-nowrap text-muted small">
                     <?= htmlspecialchars($item['trans_date'], ENT_QUOTES) ?>
                 </td>
-                <td>
+                <td class="text-center">
+                    <span class="badge rounded-pill"
+                          style="background:<?= $isIncome ? '#dcfce7' : '#fee2e2' ?>;
+                                 color:<?= $isIncome ? '#16a34a' : '#dc2626' ?>;
+                                 padding:4px 10px; font-weight:500">
+                        <?= $isIncome ? 'Thu nhập' : 'Chi tiêu' ?>
+                    </span>
+                </td>
+                <td class="text-center">
                     <span class="badge rounded-pill fw-normal"
                           style="background:<?= htmlspecialchars($color,ENT_QUOTES) ?>;
                                  color:#fff;
                                  padding:4px 10px">
                         <?= htmlspecialchars($item['category_name'], ENT_QUOTES) ?>
                     </span>
-                    <span class="badge rounded-pill ms-1"
-                          style="background:<?= $isIncome ? '#dcfce7' : '#fee2e2' ?>;
-                                 color:<?= $isIncome ? '#16a34a' : '#dc2626' ?>;
-                                 font-size:0.65em;padding:3px 7px">
-                        <?= $isIncome ? 'Thu' : 'Chi' ?>
-                    </span>
                 </td>
-                <td class="text-end fw-medium <?= $amountClass ?>">
+                <td class="text-center fw-medium <?= $amountClass ?>">
                     <?= $amountPrefix ?><?= number_format($item['amount'], 0, ',', '.') ?>đ
                 </td>
-                <td class="text-muted small text-truncate" style="max-width:200px">
+                <td class="text-center text-muted small text-truncate" style="max-width:200px">
                     <?= htmlspecialchars($item['note'] ?? '', ENT_QUOTES) ?>
                 </td>
                 <td class="text-center">
@@ -511,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
       confirmBtn.onclick=()=>{
         startDateInput.value = selFrom;
         endDateInput.value = selTo;
-        document.getElementById('dateRangeDisplay').innerHTML = `<i class="bi bi-calendar3 me-1"></i> ${fmtD(selFrom)} – ${fmtD(selTo)}`;
+        document.getElementById('dateRangeDisplay').textContent = `${fmtD(selFrom)} – ${fmtD(selTo)}`;
         popup.classList.add('d-none');backdrop.classList.add('d-none');
         // Không tự submit form, đợi người dùng bấm "Lọc"
       };

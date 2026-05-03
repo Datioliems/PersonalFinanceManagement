@@ -290,9 +290,16 @@ const crosshairPlugin = {
   }
 };
 
-// ── Column shadow plugin — canh chính xác theo bounds thực của nhóm cột ──
+// ── Column shadow plugin — chỉ hiện khi hover, ẩn khi rời chuột ──
 const barShadowPlugin = {
   id: 'barColumnShadow',
+  afterEvent(chart, args) {
+    const evt = args.event;
+    if (evt.type === 'mouseout' || evt.type === 'mouseleave') {
+      chart._hoverIndex = null;
+      chart.draw();
+    }
+  },
   beforeDatasetsDraw(chart) {
     const idx = chart._hoverIndex;
     if (idx == null) return;
