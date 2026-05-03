@@ -58,14 +58,7 @@ class AuthController extends BaseController
     public function showRegister(): void
     {
         if ($this->auth->isLoggedIn()) $this->redirect(BASE_URL . '/dashboard');
-        $old         = $_SESSION['_register_old']   ?? [];
-        $fieldErrors = $_SESSION['_register_errors'] ?? [];
-        unset($_SESSION['_register_old'], $_SESSION['_register_errors']);
-        $this->render('auth/register', [
-            'csrf'        => CsrfTokenManager::generate(),
-            'old'         => $old,
-            'fieldErrors' => $fieldErrors,
-        ]);
+        $this->render('auth/register', ['csrf' => CsrfTokenManager::generate()]);
     }
 
     // ── POST /register ──────────────────────────────────────────
@@ -77,39 +70,25 @@ class AuthController extends BaseController
         }
         CsrfTokenManager::invalidate();
 
-        $username = trim($_POST['username'] ?? '');
-        $email    = trim($_POST['email']    ?? '');
-        $password = $_POST['password']      ?? '';
-        $confirm  = $_POST['password_confirm'] ?? '';
-
-        // Validate per-field để highlight đúng ô bị lỗi
-        $fieldErrors = [];
-        if (strlen($username) < 3)                              $fieldErrors['username'][] = 'Tối thiểu 3 ký tự.';
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $username))       $fieldErrors['username'][] = 'Chỉ chứa a-z, 0-9 và dấu _.';
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL))         $fieldErrors['email'][]    = 'Email không hợp lệ.';
-        if (strlen($password) < 8)                              $fieldErrors['password'][] = 'Tối thiểu 8 ký tự.';
-        if (!preg_match('/[A-Z]/', $password))                  $fieldErrors['password'][] = 'Cần ít nhất 1 chữ HOA.';
-        if (!preg_match('/[0-9]/', $password))                  $fieldErrors['password'][] = 'Cần ít nhất 1 chữ số.';
-        if ($password !== $confirm)                             $fieldErrors['confirm'][]  = 'Hai mật khẩu không khớp.';
-
-        if (!empty($fieldErrors)) {
-            $_SESSION['_register_old']    = ['username' => $username, 'email' => $email];
-            $_SESSION['_register_errors'] = $fieldErrors;
+        $errors = $this->validateRegisterInput(
+            trim($_POST['username'] ?? ''),
+            trim($_POST['email']    ?? ''),
+            $_POST['password']      ?? '',
+            $_POST['password_confirm'] ?? ''
+        );
+        if ($errors) {
+            FlashMessage::set('danger', implode('<br>', $errors));
             $this->redirect(BASE_URL . '/register');
         }
 
         try {
-            $userId = $this->auth->register($username, $email, $password);
-
-            // Tự động đăng nhập
-            $_SESSION['user_id']  = $userId;
-            $_SESSION['username'] = $username;
-
-            FlashMessage::set('success', '✅ Đăng ký thành công! Bạn đã được đăng nhập.');
-            $this->redirect(BASE_URL . '/dashboard');
+            $this->auth->register(
+                trim($_POST['username']), trim($_POST['email']), $_POST['password']
+            );
+            FlashMessage::set('success', '✅ Đăng ký thành công! Kiểm tra email để xác nhận tài khoản trước khi đăng nhập.');
+            $this->redirect(BASE_URL . '/login');
         } catch (\RuntimeException $e) {
-            $_SESSION['_register_old']    = ['username' => $username, 'email' => $email];
-            $_SESSION['_register_errors'] = ['username' => [$e->getMessage()]];
+            FlashMessage::set('danger', $e->getMessage());
             $this->redirect(BASE_URL . '/register');
         }
     }

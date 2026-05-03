@@ -27,17 +27,12 @@ abstract class BaseController
         require $viewFile;
     }
 
+    /** Redirect và dừng lại (PRG Pattern) */
     protected function redirect(string $url): never
     {
-        $basePath = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
-
-        // Nếu URL đã chứa BASE_URL ở đầu, ta không cần thêm nữa
-        if (BASE_URL !== '' && str_starts_with($url, BASE_URL)) {
-            // Không làm gì, URL đã chuẩn
-        } elseif ($basePath !== '' && str_starts_with($url, $basePath)) {
-            // Nếu URL bắt đầu bằng đường dẫn tương đối của project, thay thế bằng BASE_URL tuyệt đối
-            $url = BASE_URL . substr($url, strlen($basePath));
-        } elseif (str_starts_with($url, '/')) {
+        if (str_starts_with($url, '/')) {
+            // Tránh nối double prefix nếu user đã gõ sẵn
+            $url = str_replace('/project/de13_complete/public', '', $url);
             $url = BASE_URL . $url;
         }
         header('Location: ' . $url);

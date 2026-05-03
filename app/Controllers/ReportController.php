@@ -1,147 +1,84 @@
 <?php
+// ============================================================
+// CONTROLLER — app/Controllers/ReportController.php
+// ============================================================
+// TV5 viết — Ngày 3–6
+//
+// Routes:
+//   GET /report          → index()   (báo cáo chi tiết)
+//   GET /report/export   → export()  (download CSV)
+// ============================================================
+
 namespace App\Controllers;
+
 use App\Services\{ReportService, FinanceReport};
 use App\Repositories\TransactionRepository;
 
 class ReportController extends BaseController
 {
-    private ReportService         $reportService;
-    private FinanceReport         $financeReport;
-    private TransactionRepository $txRepo;
+    private ReportService $reportService;
+    private FinanceReport $financeReport;
 
     public function __construct()
     {
-        $this->txRepo        = new TransactionRepository();
-        $this->reportService = new ReportService($this->txRepo);
-        $this->financeReport = new FinanceReport($this->txRepo);
+        $txRepo              = new TransactionRepository();
+        $this->reportService = new ReportService($txRepo);
+        $this->financeReport = new FinanceReport($txRepo);
     }
 
+    // ── GET /report ───────────────────────────────────────────
+    /**
+     * Báo cáo chi tiết — có thể chọn tháng/năm.
+     */
     public function index(): void
     {
-        $uid = $this->currentUserId();
+        $uid   = $this->currentUserId();
+        $month = (int)($_GET['month'] ?? date('n'));
+        $year  = (int)($_GET['year']  ?? date('Y'));
 
-        // ── Xác định kỳ (date range) ─────────────────────────
-        $monthStart = date('Y-m-01');
-        $monthEnd   = date('Y-m-t');
+        $summary   = $this->reportService->getSummaryByMonth($month, $year, $uid);
+        $donutData = $this->reportService->getByCategory($month, $year, $uid);
+        $barData   = $this->reportService->getTrend(4, $uid);
 
-        $dateFrom = $_GET['date_from'] ?? $monthStart;
-        $dateTo   = $_GET['date_to']   ?? $monthEnd;
-
-        // Validate format
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) $dateFrom = $monthStart;
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo))   $dateTo   = $monthEnd;
-        if ($dateFrom > $dateTo) [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
-
-        $totalDays = (int)(
-            (new \DateTime($dateTo))->diff(new \DateTime($dateFrom))->days
-        ) + 1;
-
-        // ── Granularity rules ────────────────────────────────
-        // ≤7    → day only              (quá ngắn, tuần/tháng vô nghĩa)
-        // 8-31  → day, week             (< 32 ngày: ẩn Tháng)
-        // 32-50 → day, week, month      (đủ cả 3)
-        // 51-366→ week, month           (> 50 ngày: ẩn Ngày vì quá nhiều điểm)
-        // >366  → month only            (> 1 năm: ẩn cả Tuần)
-        if ($totalDays <= 7)         $allowedGranularity = ['day'];
-        elseif ($totalDays < 32)     $allowedGranularity = ['day', 'week'];
-        elseif ($totalDays <= 50)    $allowedGranularity = ['day', 'week', 'month'];
-        elseif ($totalDays <= 366)   $allowedGranularity = ['week', 'month'];
-        else                         $allowedGranularity = ['month'];
-
-        // Không lưu granularity vào URL nữa — JS xử lý client-side
-        // Tab
-        $tab     = in_array($_GET['tab'] ?? '', ['overview','category'], true)
-            ? $_GET['tab'] : 'overview';
-        $catType = ($_GET['cat_type'] ?? 'expense') === 'income' ? 'income' : 'expense';
-
-        // ── Data ─────────────────────────────────────────────
-        $summary       = $this->reportService->getSummaryByRange($dateFrom, $dateTo, $uid);
-        $walletBalance = $this->reportService->getWalletBalance($dateTo, $uid);
-
-        // Pre-compute ALL granularities cho cả 2 charts (JS dùng không reload)
-        $allCharts = [];
-        foreach ($allowedGranularity as $g) {
-            $allCharts['balance'][$g] = $this->reportService->getBalanceChartData($dateFrom, $dateTo, $uid, $g);
-            $allCharts['incExp'][$g]  = $this->reportService->getIncomeExpenseChartData($dateFrom, $dateTo, $uid, $g);
-        }
-        $allCharts['incomeDonut']  = $this->reportService->getByCategoryByRange($dateFrom, $dateTo, $uid, 'income');
-        $allCharts['expenseDonut'] = $this->reportService->getByCategoryByRange($dateFrom, $dateTo, $uid, 'expense');
-
-        // Chi tiết danh mục tab
-        $categoryDetail = $tab === 'category'
-            ? $this->txRepo->getByCategoryByRange($uid, $dateFrom, $dateTo, $catType)
-            : [];
+        $chartJson = json_encode(
+            ['donut' => $donutData, 'bar' => $barData],
+            JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+        );
 
         $this->render('report/index', [
-            'summary'            => $summary,
-            'walletBalance'      => $walletBalance,
-            'allChartsJson'      => json_encode($allCharts, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
-            'allowedGranJson'    => json_encode($allowedGranularity),
-            'dateFrom'           => $dateFrom,
-            'dateTo'             => $dateTo,
-            'totalDays'          => $totalDays,
-            'allowedGranularity' => $allowedGranularity,
-            'tab'                => $tab,
-            'catType'            => $catType,
-            'categoryDetail'     => $categoryDetail,
-            'pageTitle'          => 'Báo cáo tài chính cá nhân',
-            'needChartJs'        => true,
+            'summary'     => $summary,
+            'chartJson'   => $chartJson,
+            'month'       => $month,
+            'year'        => $year,
+            'pageTitle'   => "Báo cáo tháng {$month}/{$year}",
+            'needChartJs' => true,
         ]);
     }
 
+    // ── GET /report/export ────────────────────────────────────
     /**
-     * AJAX: danh sách giao dịch của 1 category trong kỳ
-     * GET /report/transactions?category_name=X&date_from=Y&date_to=Z&type=income|expense
+     * Download CSV — stream trực tiếp, không lưu file trên server.
+     *
+     * HTTP headers phải set trước khi bất kỳ output nào.
+     * BOM UTF-8 được set bên trong FinanceReport::exportCsv().
      */
-    public function transactions(): void
-    {
-        $uid        = $this->currentUserId();
-        $categoryId = (int)($_GET['category_id'] ?? 0);
-        $dateFrom   = $_GET['date_from'] ?? date('Y-m-01');
-        $dateTo     = $_GET['date_to']   ?? date('Y-m-t');
-        $type       = in_array($_GET['type'] ?? '', ['income','expense'], true) ? $_GET['type'] : '';
-
-        $rows = $this->txRepo->findFiltered(
-            $uid, $type, 'date_desc', $dateFrom, $dateTo, 200, 0, $categoryId
-        );
-
-        $out = array_map(fn($r) => [
-            'date'          => date('d/m/Y', strtotime($r['trans_date'])),
-            'category_name' => $r['category_name'],
-            'amount'        => (float)$r['amount'],
-            'type'          => $r['type'],
-            'note'          => $r['note'] ?? '',
-        ], $rows);
-
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($out, JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
     public function export(): void
     {
-        $uid      = $this->currentUserId();
-        $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
-        $dateTo   = $_GET['date_to']   ?? date('Y-m-t');
-        $this->financeReport->exportCsvByRange($dateFrom, $dateTo, $uid);
-        exit;
-    }
+        $uid   = $this->currentUserId();
+        $month = (int)($_GET['month'] ?? date('n'));
+        $year  = (int)($_GET['year']  ?? date('Y'));
 
-    /**
-     * AJAX: chi tiet danh muc - khong reload trang
-     * GET /report/category-detail?cat_type=expense&date_from=Y&date_to=Z
-     */
-    public function categoryDetail(): void
-    {
-        $uid     = $this->currentUserId();
-        $catType = ($_GET['cat_type'] ?? 'expense') === 'income' ? 'income' : 'expense';
-        $df      = $_GET['date_from'] ?? date('Y-m-01');
-        $dt      = $_GET['date_to']   ?? date('Y-m-t');
+        $filename = sprintf('bao-cao-%04d-%02d.csv', $year, $month);
 
-        $rows = $this->txRepo->getByCategoryByRange($uid, $df, $dt, $catType);
+        // Set headers trước khi bất kỳ echo nào
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
 
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(array_values($rows), JSON_UNESCAPED_UNICODE);
+        // FinanceReport::exportCsv() stream trực tiếp ra output
+        $this->financeReport->exportCsv($month, $year, $uid);
         exit;
     }
 }

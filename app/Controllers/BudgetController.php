@@ -41,27 +41,19 @@ class BudgetController extends BaseController
         $uid   = $this->currentUserId();
         $month = (int)($_GET['month'] ?? date('n'));
         $year  = (int)($_GET['year']  ?? date('Y'));
-        $page  = max(1, (int)($_GET['page'] ?? 1));
 
         // Gọi Service — không gọi Repository trực tiếp
-        $allSummary = $this->budgetService->getBudgetSummary($uid, $month, $year);
-        $cats       = $this->catRepo->findByUser($uid);
-        $csrf       = CsrfTokenManager::generate();
-
-        // Phân trang — 8 mục/trang
-        $perPage = 8;
-        $pager   = new \App\Helpers\Paginator(count($allSummary), $perPage, $page);
-        $summary = array_slice($allSummary, $pager->getOffset(), $perPage);
+        $summary = $this->budgetService->getBudgetSummary($uid, $month, $year);
+        $cats    = $this->catRepo->findByUser($uid);
+        $csrf    = CsrfTokenManager::generate();
 
         $this->render('budget/index', [
-            'summary'    => $summary,
-            'allSummary' => $allSummary,
-            'cats'       => $cats,
-            'csrf'       => $csrf,
-            'month'      => $month,
-            'year'       => $year,
-            'pager'      => $pager,
-            'pageTitle'  => 'Ngân sách tháng ' . $month . '/' . $year,
+            'summary'   => $summary,
+            'cats'      => $cats,
+            'csrf'      => $csrf,
+            'month'     => $month,
+            'year'      => $year,
+            'pageTitle' => 'Ngân sách tháng ' . $month . '/' . $year,
         ]);
     }
 

@@ -1,214 +1,135 @@
 <?php
 // ============================================================
-// VIEW — app/Views/categories/index.php
+// VIEW — app/Views/project/de13_complete/public/categories/index.php
 // ============================================================
-// Biến nhận từ CategoryController::index() qua extract():
-/** @var array  $cats  — toàn bộ danh mục (cho form) */
-/** @var array  $expenseCats — danh mục chi tiêu (phân trang) */
-/** @var array  $incomeCats  — danh mục thu nhập (phân trang) */
-/** @var array  $bothCats    — danh mục chung (phân trang) */
-/** @var bool   $hasAny      — có bất kỳ danh mục nào không */
-/** @var string $csrf  — CSRF token (one-time) */
-/** @var \App\Helpers\Paginator $pager — đối tượng phân trang */
+// Biến nhận từ CategoryController::index():
+//   $cats  — array các danh mục
+//   $csrf  — CSRF token -- CHƯA CÓ 
 // ============================================================
 $pageTitle = $pageTitle ?? 'Danh mục';
-$extraCss  = BASE_URL . '/css/categories.css';
-$extraCss2 = BASE_URL . '/css/transactions.css'; // pager styles
 require BASE_PATH . '/app/Views/partials/layout.php';
 ?>
 
-<!-- ── Header ──────────────────────────────────────────────── -->
-<div class="page-header-shared">
+<div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="page-title">
-            <i class="bi bi-tags me-2" style="color:#6366f1"></i>Danh mục
-        </h1>
-        <p class="page-subtitle">Quản lý danh mục thu / chi cá nhân của bạn</p>
+        <h2 class="h4 fw-semibold mb-1">Danh mục</h2>
+        <p class="text-muted small mb-0">Quản lý danh mục thu/chi của bạn</p>
     </div>
-    <button class="btn-add-cat" data-bs-toggle="modal" data-bs-target="#modalCreate">
-        <i class="bi bi-plus-lg"></i> Thêm danh mục
+    <button class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalCreate">
+        <i class="bi bi-plus-lg me-1"></i> Thêm danh mục
     </button>
 </div>
 
-<!-- ── Danh sách danh mục ──────────────────────────────────── -->
-<?php if (!($hasAny ?? !empty($cats))): ?>
-<div class="cat-empty">
-    <i class="bi bi-tags cat-empty-icon"></i>
-    <h3>Chưa có danh mục nào</h3>
-    <p>Tạo danh mục để phân loại thu nhập và chi tiêu dễ dàng hơn.</p>
-    <button class="btn-add-cat" data-bs-toggle="modal" data-bs-target="#modalCreate">
-        <i class="bi bi-plus-lg"></i> Tạo danh mục đầu tiên
-    </button>
-</div>
-
+<!-- Danh sách danh mục -->
+<?php if (empty($cats)): ?>
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-tags fs-1 d-block mb-2"></i>
+        Chưa có danh mục nào.
+        <a href="#" data-bs-toggle="modal" data-bs-target="#modalCreate">Tạo ngay</a>
+    </div>
 <?php else: ?>
-<?php
-// expenseCats / incomeCats / bothCats đã được phân trang sẵn từ controller
-// cats = toàn bộ (dùng cho modal dropdown)
-function renderCatCard($cat, $csrf) {
-    $color      = htmlspecialchars($cat['color'] ?? '#6366f1', ENT_QUOTES);
-    $icon       = htmlspecialchars($cat['icon']  ?? 'bi-tag',  ENT_QUOTES);
-    $name       = htmlspecialchars($cat['name'],                ENT_QUOTES);
-    $colorBg    = $color . '1e';
-    [$badgeClass, $badgeLabel] = match($cat['type']) {
-        'income'  => ['cat-badge-income',  'Thu nhập'],
-        'expense' => ['cat-badge-expense', 'Chi tiêu'],
-        default   => ['cat-badge-both',    'Cả hai'],
-    };
-    ?>
-    <div class="cat-card" style="--cat-color:<?= $color ?>; --cat-color-bg:<?= $colorBg ?>">
-        <div class="cat-icon-wrap"><i class="<?= $icon ?>"></i></div>
-        <div class="cat-info">
-            <div class="cat-name" title="<?= $name ?>"><?= $name ?></div>
-            <span class="cat-badge <?= $badgeClass ?>"><?= $badgeLabel ?></span>
-        </div>
-        <div class="cat-actions">
-            <a href="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/edit" class="cat-btn cat-btn-edit" title="Sửa"><i class="bi bi-pencil"></i></a>
-            <form method="POST" action="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/delete" class="m-0">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf ?? '', ENT_QUOTES) ?>">
-                <button type="submit" class="cat-btn cat-btn-del" title="Xoá" data-confirm="Xoá danh mục '<?= $name ?>'?"><i class="bi bi-trash3"></i></button>
-            </form>
-        </div>
-    </div>
-    <?php
-}
-?>
-
-<div class="row g-4" id="catGrid">
-    <div class="col-12 col-md-6">
-        <h4 class="h5 fw-semibold mb-3 text-danger"><i class="bi bi-arrow-up-circle me-2"></i>Danh mục Chi tiêu</h4>
-        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
-            <?php foreach ($expenseCats as $cat) renderCatCard($cat, $csrf); ?>
-            <?php if (empty($expenseCats)): ?>
-                <div class="text-muted small">Chưa có danh mục chi tiêu nào.</div>
-            <?php endif; ?>
-        </div>
-    </div>
-    <div class="col-12 col-md-6">
-        <h4 class="h5 fw-semibold mb-3 text-success"><i class="bi bi-arrow-down-circle me-2"></i>Danh mục Thu nhập</h4>
-        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
-            <?php foreach ($incomeCats as $cat) renderCatCard($cat, $csrf); ?>
-            <?php if (empty($incomeCats)): ?>
-                <div class="text-muted small">Chưa có danh mục thu nhập nào.</div>
-            <?php endif; ?>
+<div class="row g-3">
+    <?php foreach ($cats as $cat): ?>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <!-- Icon + màu -->
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width:42px;height:42px;
+                            background:<?= htmlspecialchars($cat['color'] ?? '#e5e7eb', ENT_QUOTES) ?>22">
+                    <i class="<?= htmlspecialchars($cat['icon'] ?? 'bi-tag', ENT_QUOTES) ?> fs-5"
+                       style="color:<?= htmlspecialchars($cat['color'] ?? '#6b7280', ENT_QUOTES) ?>"></i>
+                </div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="fw-medium text-truncate">
+                        <?= htmlspecialchars($cat['name'], ENT_QUOTES) ?>
+                    </div>
+                    <small class="text-muted">
+                        <?= match($cat['type']) {
+                            'income'  => '<span class="badge bg-success-subtle text-success">Thu nhập</span>',
+                            'expense' => '<span class="badge bg-danger-subtle text-danger">Chi tiêu</span>',
+                            default   => '<span class="badge bg-secondary-subtle text-secondary">Cả hai</span>',
+                        } ?>
+                    </small>
+                </div>
+                <!-- Sửa/Xoá -->
+                <div class="flex-shrink-0 d-flex gap-1">
+                    <a href="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/edit"
+                       class="btn btn-sm btn-outline-secondary py-0 px-2">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST"
+                          action="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/delete"
+                          class="m-0">
+                        <input type="hidden" name="csrf_token"
+                               value="<?= htmlspecialchars($csrf, ENT_QUOTES) ?>">
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-danger py-0 px-2"
+                                data-confirm="Xoá danh mục '<?= htmlspecialchars($cat['name'], ENT_QUOTES) ?>'?">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
-    <?php if (!empty($bothCats)): ?>
-    <div class="col-12">
-        <h4 class="h5 fw-semibold mb-3 text-primary"><i class="bi bi-arrow-left-right me-2"></i>Danh mục Cả hai</h4>
-        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
-            <?php foreach ($bothCats as $cat) renderCatCard($cat, $csrf); ?>
-        </div>
-    </div>
-    <?php endif; ?>
+    <?php endforeach; ?>
 </div>
 <?php endif; ?>
 
-<?php if (isset($pager)): ?>
-<?= $pager->render(BASE_URL . '/categories', true) ?>
-<?php endif; ?>
-
-
-<!-- ── Modal: Tạo danh mục mới ────────────────────────────── -->
-<div class="modal fade" id="modalCreate" tabindex="-1" aria-labelledby="modalCreateLabel">
+<!-- Modal tạo danh mục mới -->
+<div class="modal fade" id="modalCreate" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <div class="modal-header">
-                <h5 class="modal-title" id="modalCreateLabel">
-                    <i class="bi bi-plus-circle me-2 text-primary"></i>Thêm danh mục mới
-                </h5>
+                <h5 class="modal-title fw-semibold">Thêm danh mục mới</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <form method="POST" action="<?= BASE_URL ?>/categories">
                 <input type="hidden" name="csrf_token"
-                       value="<?= htmlspecialchars($csrf ?? '', ENT_QUOTES) ?>">
-
+                       value="<?= htmlspecialchars($csrf, ENT_QUOTES) ?>">
                 <div class="modal-body">
-
-                    <!-- Tên danh mục -->
                     <div class="mb-3">
-                        <label for="catName" class="form-label fw-semibold">
+                        <label class="form-label fw-medium">
                             Tên danh mục <span class="text-danger">*</span>
                         </label>
-                        <input type="text" id="catName" name="name" class="form-control"
-                               placeholder="VD: Ăn uống, Đi lại, Lương..."
-                               required minlength="2" maxlength="100" autocomplete="off">
+                        <input type="text" name="name" class="form-control"
+                               placeholder="VD: Ăn uống, Đi lại..."
+                               required minlength="2" maxlength="100">
                     </div>
-
-                    <!-- Loại -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Loại</label>
-                        <div class="d-flex gap-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio"
-                                       name="type" id="typeExpense" value="expense" checked>
-                                <label class="form-check-label" for="typeExpense">
-                                    <span class="cat-badge cat-badge-expense">Chi tiêu</span>
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio"
-                                       name="type" id="typeIncome" value="income">
-                                <label class="form-check-label" for="typeIncome">
-                                    <span class="cat-badge cat-badge-income">Thu nhập</span>
-                                </label>
+                        <label class="form-label fw-medium">Loại</label>
+                        <select name="type" class="form-select">
+                            <option value="expense">Chi tiêu</option>
+                            <option value="income">Thu nhập</option>
+                        </select>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label fw-medium">Màu sắc</label>
+                            <input type="color" name="color" class="form-control form-control-color w-100"
+                                   value="#6366f1">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-medium">Icon Bootstrap</label>
+                            <input type="text" name="icon" class="form-control"
+                                   placeholder="bi-cup-hot">
+                            <div class="form-text">
+                                <a href="https://icons.getbootstrap.com" target="_blank">Xem danh sách icon</a>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Icon -->
-                    <div class="mb-3">
-                        <label for="catIcon" class="form-label fw-semibold">Icon</label>
-                        <div class="input-group" style="cursor:pointer"
-                             data-icon-picker="catIcon">
-                            <span class="input-group-text bg-white border-end-0 px-2" id="iconPreviewBox" style="color: #6366f1;">
-                                <i class="bi bi-tag" id="iconPreviewEl"></i>
-                            </span>
-                            <input type="text" id="catIcon" name="icon" class="form-control border-start-0 border-end-0 ps-0"
-                                   placeholder="Chọn icon..." autocomplete="off" readonly style="cursor: pointer; background-color: #fff;">
-                            <span class="input-group-text bg-white text-muted border-start-0">
-                                <i class="bi bi-chevron-down" style="font-size: .8rem"></i>
-                            </span>
-                        </div>
-                        <div class="form-text text-muted"><i class="bi bi-magic me-1"></i>Màu sắc sẽ được tự động gán ngẫu nhiên.</div>
-                    </div>
-
-                </div><!-- /.modal-body -->
-
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary"
                             data-bs-dismiss="modal">Huỷ</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-dark">
                         <i class="bi bi-plus-lg me-1"></i>Tạo danh mục
                     </button>
                 </div>
             </form>
-
         </div>
     </div>
 </div>
 
 <?php require BASE_PATH . '/app/Views/partials/footer.php'; ?>
-
-<!-- ── JS: stagger animation + live preview icon/màu ───────── -->
-<script>
-(function () {
-    /* Stagger animation delay cho từng card */
-    document.querySelectorAll('#catGrid .cat-card').forEach(function (card, i) {
-        card.style.animationDelay = (i * 0.05) + 's';
-    });
-
-    /* Live preview icon */
-    const iconInput = document.getElementById('catIcon');
-    const iconEl    = document.getElementById('iconPreviewEl');
-
-    if (iconInput && iconEl) {
-        iconInput.addEventListener('input', function (e) {
-            var cls = e.target.value.trim() || 'bi-tag';
-            iconEl.className = cls.startsWith('bi-') ? 'bi ' + cls : 'bi bi-tag';
-        });
-    }
-})();
-</script>

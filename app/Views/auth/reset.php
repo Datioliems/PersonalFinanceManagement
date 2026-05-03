@@ -1,10 +1,5 @@
 <?php
-/** 
- * @var string $csrf 
- * @var string $token 
- */
 $pageTitle = 'Đặt lại mật khẩu';
-$extraCss  = BASE_URL . '/css/auth.css';
 require BASE_PATH . '/app/Views/partials/layout.php';
 ?>
 <div class="row justify-content-center mt-4">
