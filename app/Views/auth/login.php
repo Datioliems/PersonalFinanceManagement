@@ -5,7 +5,9 @@
 // Biến nhận từ AuthController::showLogin():
 //   $csrf — CSRF token (string)
 // ============================================================
+/** @var string $csrf */
 $pageTitle = 'Đăng nhập';
+$extraCss  = BASE_URL . '/css/auth.css';
 require BASE_PATH . '/app/Views/partials/layout.php';
 ?>
 
@@ -106,6 +108,9 @@ require BASE_PATH . '/app/Views/partials/layout.php';
         <p class="text-center mt-3 text-muted small">
             Chưa có tài khoản?
             <a href="<?= BASE_URL ?>/register" class="text-dark fw-medium">Đăng ký ngay</a>
+        </p>
+        <p class="text-center mt-1 text-muted small">
+            <a href="<?= BASE_URL ?>/forgot-password" class="text-muted">Quên mật khẩu?</a>
         </p>
 
     </div>

@@ -33,40 +33,46 @@ class TransactionController extends BaseController
     {
         $uid         = $this->currentUserId();
         $page        = max(1, (int)($_GET['page'] ?? 1));
-        $filterMonth = $_GET['filter_month'] ?? '';
+        
+        $startDate   = $_GET['start_date'] ?? date('Y-m-01');
+        $endDate     = $_GET['end_date'] ?? date('Y-m-t');
+        
         $filterType  = $_GET['filter_type'] ?? '';
         $sort        = $_GET['sort'] ?? 'date_desc';
+        $catFilter   = (int)($_GET['category_id'] ?? 0);
 
-        if (!empty($filterMonth) && !preg_match('/^\d{4}-\d{2}$/', $filterMonth)) {
-            $filterMonth = '';
-        }
-        if (!in_array($filterType, ['income', 'expense'], true)) {
-            $filterType = '';
-        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) $startDate = date('Y-m-01');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate)) $endDate = date('Y-m-t');
+        if (!in_array($filterType, ['income', 'expense', ''], true)) $filterType = '';
 
-        // Phân trang với tất cả loại giao dịch
-        $total = $this->txRepo->countFiltered($uid, $filterType, $filterMonth);
-        $pager = new Paginator($total, 15, $page);
-
+        $total = $this->txRepo->countFiltered($uid, $filterType, $startDate, $endDate, $catFilter);
+        $pager = new Paginator($total, 10, $page);
         $items = $this->txRepo->findFiltered(
-            $uid, $filterType, $sort, $filterMonth,
-            $pager->getPerPage(), $pager->getOffset()
+            $uid, $filterType, $sort, $startDate, $endDate,
+            $pager->getPerPage(), $pager->getOffset(), $catFilter
         );
 
-        $monthNow   = (int)date('n');
-        $yearNow    = (int)date('Y');
-        $summary    = $this->report->generateMonthly($monthNow, $yearNow, $uid);
+        // Tổng thu/chi từng ngày trong khoảng thời gian đang xem
+        $dailySummary = $this->txRepo->getDailySummary($uid, $startDate, $endDate);
+
+        // Tổng khoảng thời gian hiện tại cho stat cards
+        $summary = $this->report->generateRange($startDate, $endDate, $uid);
+
+        // Danh mục cho dropdown filter
+        $cats = $this->catRepo->findByUser($uid);
 
         $this->render('transactions/index', [
-            'items'       => $items,
-            'pager'       => $pager,
-            'filterMonth' => $filterMonth,
-            'filterType'  => $filterType,
-            'sort'        => $sort,
-            'summary'     => $summary,
-            'monthNow'    => $monthNow,
-            'yearNow'     => $yearNow,
-            'pageTitle'   => 'Giao dịch',
+            'items'        => $items,
+            'pager'        => $pager,
+            'startDate'    => $startDate,
+            'endDate'      => $endDate,
+            'filterType'   => $filterType,
+            'sort'         => $sort,
+            'catFilter'    => $catFilter,
+            'cats'         => $cats,
+            'dailySummary' => $dailySummary,
+            'summary'      => $summary,
+            'pageTitle'    => 'Giao dịch',
         ]);
     }
 
@@ -95,10 +101,16 @@ class TransactionController extends BaseController
         }
         CsrfTokenManager::invalidate();
 
+        // Chặn giao dịch trong tương lai
+        if (($_POST['trans_date'] ?? '') > date('Y-m-d')) {
+            FlashMessage::set('danger', 'Không được nhập giao dịch trong tương lai.');
+            $this->redirect(BASE_URL . '/transactions/create');
+        }
+
         $typeCategoryId = $_POST['type_category_id'] ?? '';
         if (empty($typeCategoryId) || !str_contains($typeCategoryId, '_')) {
             FlashMessage::set('danger', 'Vui lòng chọn danh mục hợp lệ.');
-            $this->redirect('/transactions/create');
+            $this->redirect(BASE_URL . '/transactions/create');
         }
 
         [$type, $categoryId]  = explode('_', $typeCategoryId, 2);
@@ -157,13 +169,27 @@ class TransactionController extends BaseController
         }
         CsrfTokenManager::invalidate();
 
+        // Chặn giao dịch trong tương lai
+        if (($_POST['trans_date'] ?? '') > date('Y-m-d')) {
+            FlashMessage::set('danger', 'Không được nhập giao dịch trong tương lai.');
+            $this->redirect(BASE_URL . '/transactions/' . (int)$id . '/edit');
+        }
+
         $typeCategoryId = $_POST['type_category_id'] ?? '';
         if (empty($typeCategoryId) || !str_contains($typeCategoryId, '_')) {
             FlashMessage::set('danger', 'Vui lòng chọn danh mục hợp lệ.');
-            $this->redirect('/transactions');
+            $this->redirect(BASE_URL . '/transactions');
         }
 
         [$type, $categoryId]  = explode('_', $typeCategoryId, 2);
+
+        // Chỉ được sửa trong cùng loại — lấy type gốc từ DB để validate
+        $original = $this->txRepo->findById((int)$id);
+        if ($original && $original['type'] !== $type) {
+            FlashMessage::set('danger', 'Không thể đổi loại giao dịch khi sửa. Thu nhập chỉ sửa thành thu nhập, chi tiêu chỉ sửa thành chi tiêu.');
+            $this->redirect(BASE_URL . '/transactions/' . (int)$id . '/edit');
+        }
+
         $_POST['category_id'] = $categoryId;
         $_POST['type']        = $type;
 
