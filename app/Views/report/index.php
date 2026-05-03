@@ -436,7 +436,7 @@ function buildDonut(canvasId, legendId, data, type){
       tdCount.className = 'text-muted small px-2';
       tdCount.textContent = (counts[i]??0)+' giao dịch';
       const tdAmt = document.createElement('td');
-      tdAmt.className = 'fw-semibold text-end';
+      tdAmt.className = `fw-semibold text-end ${type==='income'?'text-success':'text-danger'}`;
       tdAmt.textContent = fmt(amounts[i]);
       tr.append(tdDot, tdName, tdCount, tdAmt);
       tr.addEventListener('mouseenter',()=>{

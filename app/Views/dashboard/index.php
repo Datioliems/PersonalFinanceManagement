@@ -220,7 +220,7 @@ $expenseAmt = $summary['expense'] ?? 0;
         tr.innerHTML=`<td style="padding:4px 6px;width:14px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${colors[i]}"></span></td>`;
         tr.appendChild(tdName);
         const tdCount=document.createElement('td');
-        tdCount.style.cssText='padding:4px 6px;font-size:.75rem;color:#94a3b8;white-space:nowrap';
+        tdCount.style.cssText='padding:4px 6px;font-size:.75rem;color:#64748b;white-space:nowrap';
         tdCount.textContent=(counts[i]||0)+' GD';
         tr.appendChild(tdCount);
         const tdAmt=document.createElement('td');
