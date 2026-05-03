@@ -64,13 +64,13 @@ class Paginator
      * Render HTML phân trang hiện đại (class .pager-*).
      * CSS định nghĩa tại: public/css/transactions.css
      */
-    public function render(string $basePath): string
+    public function render(string $basePath, bool $alwaysShow = false): string
     {
         $totalPages  = $this->getTotalPages();
         $currentPage = $this->currentPage;
 
-        // Ẩn nếu chỉ có 1 trang
-        if ($totalPages <= 1) return '';
+        // Ẩn nếu chỉ có 1 trang (trừ khi alwaysShow = true)
+        if ($totalPages <= 1 && !$alwaysShow) return '';
 
         $html  = '<nav class="pager-wrap" aria-label="Phân trang">';
 

@@ -29,6 +29,33 @@ class CategoryRepository extends BaseRepository
     }
 
     /**
+     * Đếm tổng số danh mục của user (dùng cho Paginator).
+     */
+    public function countByUser(int $userId): int
+    {
+        $stmt = $this->db->prepare(
+            'SELECT COUNT(*) FROM categories WHERE user_id = ?'
+        );
+        $stmt->execute([$userId]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Lấy danh mục có phân trang.
+     */
+    public function findByUserPaged(int $userId, int $limit, int $offset): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM categories
+             WHERE  user_id = ?
+             ORDER BY name ASC
+             LIMIT  ? OFFSET ?'
+        );
+        $stmt->execute([$userId, $limit, $offset]);
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Lấy danh mục theo type của user.
      * type: 'income' | 'expense' | 'both'
      * Dùng: lọc dropdown cho form chi tiêu chỉ hiện expense/both
@@ -55,6 +82,19 @@ class CategoryRepository extends BaseRepository
              WHERE name = ? AND user_id = ? LIMIT 1'
         );
         $stmt->execute([$name, $userId]);
+        return $stmt->fetch() ?: null;
+    }
+
+    /**
+     * Tìm theo màu (check trùng khi tạo mới/cập nhật).
+     */
+    public function findByColorAndUser(string $color, int $userId): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM categories
+             WHERE color = ? AND user_id = ? LIMIT 1'
+        );
+        $stmt->execute([$color, $userId]);
         return $stmt->fetch() ?: null;
     }
 

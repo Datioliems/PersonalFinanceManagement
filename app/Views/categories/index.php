@@ -3,11 +3,13 @@
 // VIEW — app/Views/categories/index.php
 // ============================================================
 // Biến nhận từ CategoryController::index() qua extract():
-/** @var array  $cats  — danh sách danh mục của user */
+/** @var array  $cats  — danh sách danh mục hiện trang */
 /** @var string $csrf  — CSRF token (one-time) */
+/** @var \App\Helpers\Paginator $pager — đối tượng phân trang */
 // ============================================================
 $pageTitle = $pageTitle ?? 'Danh mục';
-$extraCss  = BASE_URL . '/css/categories.css';   // nạp CSS riêng qua layout
+$extraCss  = BASE_URL . '/css/categories.css';
+$extraCss2 = BASE_URL . '/css/transactions.css'; // pager styles
 require BASE_PATH . '/app/Views/partials/layout.php';
 ?>
 
@@ -25,7 +27,7 @@ require BASE_PATH . '/app/Views/partials/layout.php';
 </div>
 
 <!-- ── Danh sách danh mục ──────────────────────────────────── -->
-<?php if (empty($cats)): ?>
+<?php if (!($hasAny ?? !empty($cats))): ?>
 <div class="cat-empty">
     <i class="bi bi-tags cat-empty-icon"></i>
     <h3>Chưa có danh mục nào</h3>
@@ -36,54 +38,72 @@ require BASE_PATH . '/app/Views/partials/layout.php';
 </div>
 
 <?php else: ?>
-<div class="cat-grid" id="catGrid">
-    <?php foreach ($cats as $cat):
-        $color      = htmlspecialchars($cat['color'] ?? '#6366f1', ENT_QUOTES);
-        $icon       = htmlspecialchars($cat['icon']  ?? 'bi-tag',  ENT_QUOTES);
-        $name       = htmlspecialchars($cat['name'],                ENT_QUOTES);
-        $colorBg    = $color . '1e';   // opacity 12% dạng hex
-        [$badgeClass, $badgeLabel] = match($cat['type']) {
-            'income'  => ['cat-badge-income',  'Thu nhập'],
-            'expense' => ['cat-badge-expense', 'Chi tiêu'],
-            default   => ['cat-badge-both',    'Cả hai'],
-        };
+<?php
+// expenseCats / incomeCats / bothCats đã được phân trang sẵn từ controller
+// cats = toàn bộ (dùng cho modal dropdown)
+function renderCatCard($cat, $csrf) {
+    $color      = htmlspecialchars($cat['color'] ?? '#6366f1', ENT_QUOTES);
+    $icon       = htmlspecialchars($cat['icon']  ?? 'bi-tag',  ENT_QUOTES);
+    $name       = htmlspecialchars($cat['name'],                ENT_QUOTES);
+    $colorBg    = $color . '1e';
+    [$badgeClass, $badgeLabel] = match($cat['type']) {
+        'income'  => ['cat-badge-income',  'Thu nhập'],
+        'expense' => ['cat-badge-expense', 'Chi tiêu'],
+        default   => ['cat-badge-both',    'Cả hai'],
+    };
     ?>
     <div class="cat-card" style="--cat-color:<?= $color ?>; --cat-color-bg:<?= $colorBg ?>">
-
-        <!-- Icon -->
-        <div class="cat-icon-wrap">
-            <i class="<?= $icon ?>"></i>
-        </div>
-
-        <!-- Tên + loại -->
+        <div class="cat-icon-wrap"><i class="<?= $icon ?>"></i></div>
         <div class="cat-info">
             <div class="cat-name" title="<?= $name ?>"><?= $name ?></div>
             <span class="cat-badge <?= $badgeClass ?>"><?= $badgeLabel ?></span>
         </div>
-
-        <!-- Nút sửa / xóa (xuất hiện khi hover) -->
         <div class="cat-actions">
-            <a href="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/edit"
-               class="cat-btn cat-btn-edit" title="Sửa">
-                <i class="bi bi-pencil"></i>
-            </a>
-            <form method="POST"
-                  action="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/delete"
-                  class="m-0">
-                <input type="hidden" name="csrf_token"
-                       value="<?= htmlspecialchars($csrf ?? '', ENT_QUOTES) ?>">
-                <button type="submit"
-                        class="cat-btn cat-btn-del"
-                        title="Xoá"
-                        data-confirm="Xoá danh mục '<?= $name ?>'?">
-                    <i class="bi bi-trash3"></i>
-                </button>
+            <a href="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/edit" class="cat-btn cat-btn-edit" title="Sửa"><i class="bi bi-pencil"></i></a>
+            <form method="POST" action="<?= BASE_URL ?>/categories/<?= (int)$cat['id'] ?>/delete" class="m-0">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf ?? '', ENT_QUOTES) ?>">
+                <button type="submit" class="cat-btn cat-btn-del" title="Xoá" data-confirm="Xoá danh mục '<?= $name ?>'?"><i class="bi bi-trash3"></i></button>
             </form>
         </div>
     </div>
-    <?php endforeach; ?>
+    <?php
+}
+?>
+
+<div class="row g-4" id="catGrid">
+    <div class="col-12 col-md-6">
+        <h4 class="h5 fw-semibold mb-3 text-danger"><i class="bi bi-arrow-up-circle me-2"></i>Danh mục Chi tiêu</h4>
+        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+            <?php foreach ($expenseCats as $cat) renderCatCard($cat, $csrf); ?>
+            <?php if (empty($expenseCats)): ?>
+                <div class="text-muted small">Chưa có danh mục chi tiêu nào.</div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <h4 class="h5 fw-semibold mb-3 text-success"><i class="bi bi-arrow-down-circle me-2"></i>Danh mục Thu nhập</h4>
+        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+            <?php foreach ($incomeCats as $cat) renderCatCard($cat, $csrf); ?>
+            <?php if (empty($incomeCats)): ?>
+                <div class="text-muted small">Chưa có danh mục thu nhập nào.</div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php if (!empty($bothCats)): ?>
+    <div class="col-12">
+        <h4 class="h5 fw-semibold mb-3 text-primary"><i class="bi bi-arrow-left-right me-2"></i>Danh mục Cả hai</h4>
+        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+            <?php foreach ($bothCats as $cat) renderCatCard($cat, $csrf); ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 <?php endif; ?>
+
+<?php if (isset($pager)): ?>
+<?= $pager->render(BASE_URL . '/categories', true) ?>
+<?php endif; ?>
+
 
 <!-- ── Modal: Tạo danh mục mới ────────────────────────────── -->
 <div class="modal fade" id="modalCreate" tabindex="-1" aria-labelledby="modalCreateLabel">
@@ -134,29 +154,21 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                         </div>
                     </div>
 
-                    <!-- Màu sắc + Icon (cùng hàng) -->
-                    <div class="row g-3">
-                        <div class="col-auto">
-                            <label for="catColor" class="form-label fw-semibold">Màu sắc</label>
-                            <input type="color" id="catColor" name="color"
-                                   class="form-control form-control-color"
-                                   value="#6366f1" title="Chọn màu" style="height: 38px; width: 60px;">
+                    <!-- Icon -->
+                    <div class="mb-3">
+                        <label for="catIcon" class="form-label fw-semibold">Icon</label>
+                        <div class="input-group" style="cursor:pointer"
+                             data-icon-picker="catIcon">
+                            <span class="input-group-text bg-white border-end-0 px-2" id="iconPreviewBox" style="color: #6366f1;">
+                                <i class="bi bi-tag" id="iconPreviewEl"></i>
+                            </span>
+                            <input type="text" id="catIcon" name="icon" class="form-control border-start-0 border-end-0 ps-0"
+                                   placeholder="Chọn icon..." autocomplete="off" readonly style="cursor: pointer; background-color: #fff;">
+                            <span class="input-group-text bg-white text-muted border-start-0">
+                                <i class="bi bi-chevron-down" style="font-size: .8rem"></i>
+                            </span>
                         </div>
-
-                        <div class="col">
-                            <label for="catIcon" class="form-label fw-semibold">Icon</label>
-                            <div class="input-group" style="cursor:pointer"
-                                 data-icon-picker="catIcon">
-                                <span class="input-group-text bg-white border-end-0 px-2" id="iconPreviewBox" style="color: #6366f1;">
-                                    <i class="bi bi-tag" id="iconPreviewEl"></i>
-                                </span>
-                                <input type="text" id="catIcon" name="icon" class="form-control border-start-0 border-end-0 ps-0"
-                                       placeholder="Chọn icon..." autocomplete="off" readonly style="cursor: pointer; background-color: #fff;">
-                                <span class="input-group-text bg-white text-muted border-start-0">
-                                    <i class="bi bi-chevron-down" style="font-size: .8rem"></i>
-                                </span>
-                            </div>
-                        </div>
+                        <div class="form-text text-muted"><i class="bi bi-magic me-1"></i>Màu sắc sẽ được tự động gán ngẫu nhiên.</div>
                     </div>
 
                 </div><!-- /.modal-body -->
@@ -164,7 +176,7 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary"
                             data-bs-dismiss="modal">Huỷ</button>
-                    <button type="submit" class="btn btn-dark">
+                    <button type="submit" class="btn btn-primary">
                         <i class="bi bi-plus-lg me-1"></i>Tạo danh mục
                     </button>
                 </div>
@@ -183,16 +195,6 @@ require BASE_PATH . '/app/Views/partials/layout.php';
     document.querySelectorAll('#catGrid .cat-card').forEach(function (card, i) {
         card.style.animationDelay = (i * 0.05) + 's';
     });
-
-    /* Live preview màu sắc */
-    const colorInput = document.getElementById('catColor');
-    const iconBox    = document.getElementById('iconPreviewBox');
-
-    if (colorInput && iconBox) {
-        colorInput.addEventListener('input', function (e) {
-            iconBox.style.color = e.target.value;
-        });
-    }
 
     /* Live preview icon */
     const iconInput = document.getElementById('catIcon');

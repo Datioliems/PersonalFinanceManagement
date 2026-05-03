@@ -116,9 +116,16 @@ $expenseAmt = $summary['expense'] ?? 0;
   const fmt  = v => new Intl.NumberFormat('vi-VN').format(v)+'đ';
   const fmtC = v => new Intl.NumberFormat('vi-VN',{notation:'compact'}).format(v)+'đ';
 
-  // Bar chart (4 tuần) — shadow canh theo bounds thực của nhóm cột
+  // Bar chart (4 tuần) — shadow chỉ hiện khi hover, ẩn khi rời chuột
   const barShadowPlugin = {
     id: 'barColumnShadow',
+    afterEvent(chart, args) {
+      const evt = args.event;
+      if (evt.type === 'mouseout' || evt.type === 'mouseleave') {
+        chart._hoverIndex = null;
+        chart.draw();
+      }
+    },
     beforeDatasetsDraw(chart) {
       const idx = chart._hoverIndex;
       if (idx == null) return;

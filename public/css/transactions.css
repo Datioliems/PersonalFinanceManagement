@@ -5,6 +5,82 @@
             app/Views/transactions/edit.php
 ============================================================ */
 
+/* ── Date range trigger bar ──────────────────────────────── */
+.rp-bar {
+    cursor: pointer;
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    height: 34px;
+    font-size: 0.875rem;
+    color: #334155;
+    transition: border-color .2s, box-shadow .25s, background .2s;
+    user-select: none;
+}
+.rp-bar:hover {
+    border-color: #a5b4fc;
+    box-shadow: 0 2px 8px rgba(99,102,241,.12);
+    background: #faf5ff;
+}
+
+/* ── Smooth dropdown open/close ──────────────────────────── */
+.tx-filter-card .dropdown-menu {
+    animation: txDropIn .2s cubic-bezier(.16,1,.3,1) both;
+    transform-origin: top center;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 12px 32px -6px rgba(0,0,0,.12);
+    background: #fff;
+}
+@keyframes txDropIn {
+    from { opacity: 0; transform: translateY(-8px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+.tx-filter-card .dropdown-item {
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: .875rem;
+    color: #334155;
+    transition: background .15s, color .15s, transform .15s;
+}
+.tx-filter-card .dropdown-item:hover {
+    background: #f1f5f9;
+    color: #4f46e5;
+    transform: translateX(3px);
+}
+
+/* ── Quick-select buttons (bỏ border, hover tím) ─────────── */
+.rp-quick-btn {
+    display: block;
+    width: 100%;
+    padding: .3rem .6rem;
+    font-size: .8rem;
+    color: #374151;
+    text-align: left;
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, color .15s, transform .1s;
+}
+.rp-quick-btn:hover  { background: #ede9fe; color: #6d28d9; transform: translateX(2px); }
+.rp-quick-btn.active { background: #ede9fe; color: #6d28d9; font-weight: 600; }
+
+/* ── Form select smooth hover inside filter bar ──────────── */
+.tx-filter-card .form-select.shadow-none {
+    transition: border-color .2s, box-shadow .25s;
+}
+.tx-filter-card .form-select.shadow-none:hover {
+    border-color: #a5b4fc;
+    box-shadow: 0 2px 8px rgba(99,102,241,.1);
+}
+
 /* ── Stat mini-cards (trang danh sách) ───────────────────── */
 .tx-stat-card {
     border-radius: 14px;

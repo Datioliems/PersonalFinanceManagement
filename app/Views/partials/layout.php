@@ -17,13 +17,43 @@
     <?php if (!empty($extraCss)): ?>
     <link rel="stylesheet" href="<?= htmlspecialchars($extraCss, ENT_QUOTES) ?>">
     <?php endif; ?>
+    <?php if (!empty($extraCss2)): ?>
+    <link rel="stylesheet" href="<?= htmlspecialchars($extraCss2, ENT_QUOTES) ?>">
+    <?php endif; ?>
 
     <style>
         body { font-family: 'Be Vietnam Pro', sans-serif; background: #f8fafc; }
         .navbar-brand { font-weight: 600; letter-spacing: -.3px; }
         .nav-link.active { font-weight: 500; }
         main { min-height: calc(100vh - 80px); }
+
+        /* ── Global Purple Buttons ───────────────────────── */
+        .btn-primary, .btn-add, .btn-add-cat {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+            border-color: transparent !important;
+            color: #fff !important;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+            transition: opacity .2s, transform .18s, box-shadow .2s;
+        }
+        .btn-primary:hover, .btn-add:hover, .btn-add-cat:hover {
+            opacity: .9;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.45);
+        }
+        .btn-dark {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+            border-color: transparent !important;
+            color: #fff !important;
+            font-weight: 600;
+            transition: opacity .2s, transform .18s;
+        }
+        .btn-dark:hover {
+            opacity: .9;
+            transform: translateY(-1px);
+        }
         
+
         /* Modern Cards */
         .card { 
             border: 1px solid #f1f5f9; 

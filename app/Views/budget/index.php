@@ -4,18 +4,21 @@
 // ============================================================
 /**
  * Biến nhận từ BudgetController::index():
- * @var array  $summary — array budget + spent + pct + status_class
- * @var array  $cats    — array tất cả danh mục (cho dropdown)
- * @var string $csrf    — CSRF token
- * @var int    $month   — Tháng hiện tại
- * @var int    $year    — Năm hiện tại
+ * @var array  $summary    — budget trang hiện tại (sắp xếp lại)
+ * @var array  $allSummary — toàn bộ budget tháng (dùng cho modal)
+ * @var array  $cats       — array tất cả danh mục (cho dropdown)
+ * @var string $csrf       — CSRF token
+ * @var int    $month      — Tháng hiện tại
+ * @var int    $year       — Năm hiện tại
+ * @var \App\Helpers\Paginator $pager — phân trang
  * @var string|null $pageTitle
  */
 // ============================================================
 $pageTitle = $pageTitle ?? 'Ngân sách';
 $month    = $month ?? date('n');
 $year     = $year  ?? date('Y');
-$extraCss = BASE_URL . '/css/budget.css';
+$extraCss  = BASE_URL . '/css/budget.css';
+$extraCss2 = BASE_URL . '/css/transactions.css'; // pager styles
 require BASE_PATH . '/app/Views/partials/layout.php';
 ?>
 
@@ -152,6 +155,11 @@ require BASE_PATH . '/app/Views/partials/layout.php';
 </div>
 <?php endif; ?>
 
+<?php if (isset($pager)): ?>
+<?= $pager->render(BASE_URL . '/budget?month=' . $month . '&year=' . $year, true) ?>
+<?php endif; ?>
+
+
 <!-- Modal đặt hạn mức -->
 <div class="modal fade" id="modalSetLimit" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -174,7 +182,7 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                         <select name="category_id" class="form-select" required>
                             <option value="">-- Chọn danh mục chi tiêu --</option>
                             <?php 
-                            $budgetedCatIds = array_column($summary ?? [], 'category_id');
+                            $budgetedCatIds = array_column($allSummary ?? [], 'category_id');
                             $hasAvailable = false;
                             foreach ($cats as $cat): 
                                 if ($cat['type'] !== 'income' && !in_array($cat['id'], $budgetedCatIds)):
