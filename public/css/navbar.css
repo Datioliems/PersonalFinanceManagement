@@ -1,0 +1,418 @@
+/* ============================================================
+   navbar.css — Global header/navbar
+   Dùng bởi: app/Views/partials/layout.php (mọi trang)
+============================================================ */
+
+/* ══════════════════════════════════════════════════════════
+   NAVBAR WRAPPER
+══════════════════════════════════════════════════════════ */
+.app-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    /* Glassmorphism trên nền tối */
+    background: rgba(10, 14, 26, 0.92);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 2px 24px rgba(0, 0, 0, 0.28);
+    transition: background .3s;
+    padding: 0;
+}
+
+.app-navbar .container {
+    display: flex;
+    align-items: center;
+    height: 60px;
+    gap: .5rem;
+    justify-content: space-between;
+    position: relative;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BRAND LOGO
+══════════════════════════════════════════════════════════ */
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    text-decoration: none;
+    flex-shrink: 0;
+    margin-right: 1.5rem;
+}
+.nav-brand-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f8e553 0%, #f8e553 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    color: #ffffff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(116, 208, 179, 0.45);
+    transition: transform .2s, box-shadow .2s;
+}
+.nav-brand:hover .nav-brand-icon {
+    transform: rotate(-8deg) scale(1.08);
+    box-shadow: 0 6px 18px rgba(78, 78, 134, 0.6);
+}
+.nav-brand-text {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -.3px;
+    line-height: 1;
+}
+.nav-brand-sub {
+    font-size: .62rem;
+    font-weight: 400;
+    color: rgba(255,255,255,.45);
+    letter-spacing: .04em;
+    display: block;
+    margin-top: 1px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   NAV LINKS (desktop)
+══════════════════════════════════════════════════════════ */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    list-style: none;
+    margin: 0; padding: 0;
+    /* Center menu absolutely in the header */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.nav-menu .nav-item { position: relative; }
+
+.nav-menu .nav-link {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .45rem .85rem;
+    border-radius: 9px;
+    font-size: .875rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, .65);
+    text-decoration: none;
+    transition: color .18s, background .18s;
+    white-space: nowrap;
+}
+.nav-menu .nav-link i {
+    font-size: 1rem;
+    transition: transform .2s;
+}
+.nav-menu .nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, .08);
+}
+.nav-menu .nav-link:hover i { transform: translateY(-1px); }
+
+/* Active state — pill với glow */
+.nav-menu .nav-link.active {
+    color: #fff;
+    background: rgba(99, 102, 241, .22);
+    font-weight: 600;
+}
+.nav-menu .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px; height: 2.5px;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+}
+
+/* ══════════════════════════════════════════════════════════
+   USER DROPDOWN (desktop)
+══════════════════════════════════════════════════════════ */
+.nav-user {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.nav-user-btn {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .35rem .75rem .35rem .4rem;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, .07);
+    border: 1px solid rgba(255, 255, 255, .12);
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    font-size: .85rem;
+    font-weight: 500;
+    transition: background .18s, border-color .18s, color .18s;
+    cursor: pointer;
+}
+.nav-user-btn:hover,
+.nav-user-btn.show {
+    background: rgba(255, 255, 255, .13);
+    border-color: rgba(255, 255, 255, .22);
+    color: #fff;
+}
+.nav-user-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem;
+    color: #fff;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.nav-user-chevron {
+    font-size: .72rem;
+    color: rgba(255,255,255,.4);
+    transition: transform .2s;
+}
+.nav-user-btn.show .nav-user-chevron { transform: rotate(180deg); }
+
+/* Dropdown panel */
+.nav-user-dropdown {
+    min-width: 200px;
+    border: 1px solid #f1f5f9;
+    border-radius: 14px;
+    box-shadow: 0 20px 40px -8px rgba(0,0,0,.18);
+    padding: .5rem;
+    margin-top: .4rem !important;
+    animation: navDropFade .18s cubic-bezier(.16,1,.3,1);
+}
+@keyframes navDropFade {
+    from { opacity: 0; transform: translateY(-8px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.nav-user-info {
+    padding: .6rem .85rem .5rem;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: .4rem;
+}
+.nav-user-info .u-name {
+    font-weight: 600;
+    font-size: .88rem;
+    color: #0f172a;
+    display: block;
+}
+.nav-user-info .u-role {
+    font-size: .74rem;
+    color: #94a3b8;
+}
+
+.nav-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .5rem .85rem;
+    border-radius: 9px;
+    font-size: .865rem;
+    font-weight: 500;
+    color: #374151;
+    text-decoration: none;
+    transition: background .15s, color .15s, transform .15s;
+}
+.nav-dropdown-item:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    transform: translateX(3px);
+}
+.nav-dropdown-item.danger { color: #ef4444; }
+.nav-dropdown-item.danger:hover { background: #fef2f2; color: #dc2626; }
+
+/* ══════════════════════════════════════════════════════════
+   HAMBURGER TOGGLE (mobile)
+══════════════════════════════════════════════════════════ */
+.nav-toggler {
+    display: none;            /* ẩn trên desktop */
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.12);
+    cursor: pointer;
+    padding: 0 8px;
+    transition: background .18s;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+.nav-toggler:hover { background: rgba(255,255,255,.13); }
+.nav-toggler span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    border-radius: 99px;
+    background: rgba(255,255,255,.8);
+    transition: transform .25s, opacity .2s;
+}
+/* Hamburger → X khi open */
+.nav-toggler.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggler.open span:nth-child(2) { opacity: 0; }
+.nav-toggler.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE DRAWER
+══════════════════════════════════════════════════════════ */
+@media (max-width: 991.98px) {
+    .app-navbar .container { height: 56px; }
+
+    .nav-toggler { display: flex; }
+
+    /* Desktop menu ẩn */
+    .nav-menu,
+    .nav-user    { display: none; }
+
+    /* Mobile overlay menu */
+    .nav-mobile-panel {
+        position: fixed;
+        top: 56px; left: 0; right: 0; bottom: 0;
+        background: rgba(10, 14, 26, 0.97);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        z-index: 1029;
+        padding: 1rem 1.25rem 2rem;
+        overflow-y: auto;
+        /* Slide in từ trên */
+        transform: translateY(-12px);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform .25s cubic-bezier(.4,0,.2,1),
+                    opacity .22s;
+    }
+    .nav-mobile-panel.open {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    /* Mobile nav links */
+    .mobile-nav-list {
+        list-style: none;
+        margin: 0; padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: .3rem;
+    }
+    .mobile-nav-list .nav-link {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        padding: .8rem 1rem;
+        border-radius: 12px;
+        font-size: .95rem;
+        font-weight: 500;
+        color: rgba(255,255,255,.72);
+        text-decoration: none;
+        transition: background .18s, color .18s;
+    }
+    .mobile-nav-list .nav-link i { font-size: 1.15rem; }
+    .mobile-nav-list .nav-link:hover,
+    .mobile-nav-list .nav-link.active {
+        background: rgba(99,102,241,.18);
+        color: #fff;
+    }
+    .mobile-nav-list .nav-link.active { font-weight: 600; }
+
+    /* Mobile divider */
+    .mobile-divider {
+        height: 1px;
+        background: rgba(255,255,255,.08);
+        margin: .75rem 0;
+    }
+
+    /* Mobile user section */
+    .mobile-user-section {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        padding: .9rem 1rem;
+        background: rgba(255,255,255,.04);
+        border-radius: 14px;
+        margin-bottom: .75rem;
+    }
+    .mobile-user-avatar {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem;
+        color: #fff;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .mobile-user-name {
+        font-size: .9rem;
+        font-weight: 600;
+        color: #fff;
+        display: block;
+    }
+    .mobile-user-sub {
+        font-size: .74rem;
+        color: rgba(255,255,255,.4);
+    }
+
+    /* Mobile logout */
+    .mobile-logout {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        padding: .8rem 1rem;
+        border-radius: 12px;
+        font-size: .9rem;
+        font-weight: 500;
+        color: #f87171;
+        text-decoration: none;
+        transition: background .18s;
+    }
+    .mobile-logout:hover { background: rgba(239,68,68,.1); color: #ef4444; }
+}
+
+/* Desktop: ẩn mobile panel hoàn toàn */
+@media (min-width: 992px) {
+    .nav-mobile-panel { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   AUTH LINKS (chưa đăng nhập)
+══════════════════════════════════════════════════════════ */
+.nav-auth-links {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-left: auto;
+}
+.nav-auth-links .btn-nav-login {
+    padding: .35rem .9rem;
+    border-radius: 8px;
+    font-size: .85rem;
+    font-weight: 500;
+    color: rgba(255,255,255,.75);
+    text-decoration: none;
+    transition: color .18s;
+}
+.nav-auth-links .btn-nav-login:hover { color: #fff; }
+.nav-auth-links .btn-nav-register {
+    padding: .38rem 1rem;
+    border-radius: 8px;
+    font-size: .85rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 3px 12px rgba(99,102,241,.4);
+    transition: opacity .18s, transform .18s, box-shadow .18s;
+}
+.nav-auth-links .btn-nav-register:hover {
+    opacity: .92;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(99,102,241,.5);
+}

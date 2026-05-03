@@ -1,0 +1,268 @@
+/* ============================================================
+   report.css — Trang Báo cáo tài chính cá nhân
+============================================================ */
+/* Tên trang */
+.h2 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: .2rem;
+}
+/* ── Date Range Picker Bar ──────────────────────────────── */
+.rp-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #fff;
+  border: 2px solid #94a3b8;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.10);
+}
+.rp-nav-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 36px;
+  color: #64748b;
+  text-decoration: none;
+  transition: background .15s, color .15s;
+  border-right: 1px solid #f1f5f9;
+}
+.rp-nav-btn:last-child { border-right: none; border-left: 1px solid #f1f5f9; }
+.rp-nav-btn:hover { background: #f8fafc; color: #0f172a; }
+.rp-label {
+  display: flex; align-items: center;
+  padding: 0 .75rem;
+  height: 36px;
+  font-size: .85rem;
+  font-weight: 500;
+  color: #1e293b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rp-label:hover { background: #f8fafc; }
+
+/* ── Picker Popup ───────────────────────────────────────── */
+.rp-popup {
+  position: absolute;
+  top: auto;
+  right: 0;
+  z-index: 1050;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px -5px rgba(0,0,0,.15);
+  min-width: 640px;
+  animation: rpFadeIn .15s ease;
+}
+@keyframes rpFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rp-popup-inner { display: flex; gap: 0; }
+.rp-calendars { flex: 1; padding: 1rem 1.25rem; }
+.rp-quick {
+  width: 130px;
+  border-left: 1px solid #f1f5f9;
+  padding: .75rem .75rem;
+  display: flex; flex-direction: column; gap: .25rem;
+}
+.rp-quick-title { font-size: .7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; margin-bottom: .35rem; }
+.rp-quick-btn {
+  display: block;
+  padding: .3rem .6rem;
+  font-size: .8rem;
+  color: #374151;
+  text-decoration: none;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  transition: background .15s, color .15s, transform .1s;
+  white-space: nowrap;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+.rp-quick-btn:hover { background: #ede9fe; color: #6d28d9; transform: translateX(2px); }
+.rp-quick-btn.active { background: #ede9fe; color: #6d28d9; font-weight: 600; }
+
+/* Popup footer */
+.rp-popup-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .6rem 1.25rem;
+  border-top: 1px solid #f1f5f9;
+}
+.rp-selected-label { font-size: .82rem; color: #64748b; }
+
+/* Backdrop */
+.rp-backdrop {
+  position: fixed; inset: 0; z-index: 1049;
+}
+
+/* ── Calendar grid ──────────────────────────────────────── */
+.rp-cal-nav {
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: .5rem;
+}
+.rp-cal-nav span { flex: 1; text-align: center; font-weight: 600; font-size: .82rem; }
+.rp-cal-nav button {
+  background: none; border: 1px solid #e2e8f0; border-radius: 6px;
+  width: 26px; height: 26px; display:flex;align-items:center;justify-content:center;
+  cursor: pointer; font-size: .75rem; color: #64748b;
+}
+.rp-cal-nav button:hover { background: #f1f5f9; }
+.rp-two-cals { display: flex; gap: 1rem; }
+.rp-cal-table { border-collapse: collapse; width: 100%; }
+.rp-cal-table th {
+  text-align: center; font-size: .68rem; color: #94a3b8;
+  padding: .15rem .1rem; font-weight: 600;
+}
+.rp-cal-table td { text-align: center; padding: 1px; }
+.rp-day {
+  width: 30px; height: 30px; border-radius: 6px; border: none;
+  background: none; cursor: pointer; font-size: .8rem; color: #374151;
+  transition: background .12s, color .12s;
+}
+.rp-day:hover { background: #f1f5f9; }
+.rp-day.rp-sel-start, .rp-day.rp-sel-end {
+  background: #22c55e; color: #fff; font-weight: 600;
+}
+.rp-day.rp-in-range { background: #22c55e18; color: #15803d; }
+
+/* ── 4 Stat Cards ───────────────────────────────────────── */
+.rp-stat-card {
+  border: 1.5px solid #f1f5f9;
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  height: 100%;
+  transition: transform .2s, box-shadow .2s;
+  animation: rpCardUp .3s ease both;
+}
+.rp-stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px -5px rgba(0,0,0,.09); }
+/* Màu nền theo loại — giống dashboard */
+.rp-stat-card.rp-card-wallet  { background: #f0fdf4; }
+.rp-stat-card.rp-card-balance { background: #eff6ff; } /* luôn xanh dương nhạt */
+.rp-stat-card.rp-card-expense { background: #fef2f2; }
+.rp-stat-card.rp-card-income  { background: #f0fdf4; }
+.rp-stat-label {
+  font-size: .75rem;
+  color: #64748b;
+  margin-bottom: .25rem;
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+.rp-stat-value { font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+.rp-stat-period { font-size: .72rem; color: #94a3b8; margin-top: 1px; }
+
+@keyframes rpCardUp {
+  from { opacity:0; transform: translateY(10px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── Chart Cards ────────────────────────────────────────── */
+.rp-chart-card {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  height: 100%;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.rp-chart-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .85rem 1.2rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.rp-chart-title  { font-weight: 600; font-size: .9rem; color: #1e293b; }
+.rp-chart-sub    { font-size: .75rem; color: #94a3b8; margin-top: 1px; }
+.rp-chart-body   { padding: 1rem 1.2rem; }
+
+/* ── Granularity buttons ────────────────────────────────── */
+.rp-gr-group { display: flex; gap: .25rem; }
+.rp-gr-btn {
+  display: inline-flex; align-items: center;
+  padding: .2rem .55rem;
+  font-size: .75rem; font-weight: 500;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: background .12s, color .12s;
+}
+.rp-gr-btn:hover:not(:disabled) { background: #e2e8f0; color: #1e293b; }
+.rp-gr-btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+.rp-gr-btn.disabled, .rp-gr-btn:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+  pointer-events: none;
+  color: #94a3b8;
+  background: #f1f5f9;
+}
+
+/* Mobile popup fix */
+@media (max-width: 640px) {
+  .rp-popup { min-width: 98vw; right: -8px; }
+  .rp-two-cals { flex-direction: column; }
+  .rp-quick { width: 100%; border-left: none; border-top: 1px solid #f1f5f9; flex-direction: row; flex-wrap: wrap; }
+}
+
+/* ── Donut layout ─────────────────────────────────────────── */
+.rp-donut-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+.rp-donut-canvas {
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+}
+.rp-donut-legend {
+  flex: 1;
+  min-width: 180px;
+  border-collapse: collapse;
+  width: 100%;
+}
+.rp-donut-legend td { padding: 4px 6px; vertical-align: middle; }
+.rp-donut-legend .rp-legend-name { font-size: .82rem; color: #1e293b; transition: color .15s; }
+.rp-legend-row { transition: background .12s; }
+.rp-legend-row:hover td { background: #f8fafc; }
+.rp-legend-row:hover .rp-legend-name { color: #16a34a; font-weight: 600; }
+
+/* ── Category table ──────────────────────────────────────── */
+.rp-cat-table-wrap { border-radius: 14px; border: 1.5px solid #e2e8f0; background: #fff; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+.rp-cat-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.rp-cat-table thead th {
+  background: #f8fafc;
+  padding: .65rem 1rem;
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: #64748b;
+  border-bottom: 2px solid #e2e8f0;
+}
+.rp-cat-table thead th:first-child { width: 48%; }
+.rp-cat-table thead th:nth-child(2) { width: 12%; text-align:center; }
+.rp-cat-table thead th:nth-child(3) { width: 22%; text-align:right; }
+.rp-cat-table thead th:nth-child(4) { width: 18%; text-align:right; }
+.rp-cat-table tbody td { padding: .65rem 1rem; font-size: .85rem; border-bottom: 1px solid #e8ecf0; }
+.rp-cat-table tbody td:nth-child(2) { text-align: center; color: #64748b; }
+.rp-cat-table tbody td:nth-child(3) { text-align: right; }
+.rp-cat-table tbody td:nth-child(4) { text-align: right; }
+.rp-cat-row { transition: background .12s; }
+.rp-cat-row:hover td { background: #f8fafc; }
+.rp-cat-bar { height: 3px; background: #f1f5f9; border-radius: 99px; margin-top: 4px; }
+.rp-cat-bar-fill { height: 3px; border-radius: 99px; }
+.rp-cat-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.rp-pct-badge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .75rem; font-weight: 600; }
+.rp-cat-foot td { padding: .65rem 1rem; font-size: .85rem; border-top: 2px solid #e2e8f0; background: #f8fafc; }
+.rp-cat-foot td:nth-child(3) { text-align: right; }
+.rp-cat-foot td:nth-child(4) { text-align: right; }
+
+/* ── TX modal table — moved to layout.php ─────── */
+
