@@ -17,6 +17,9 @@
 
 declare(strict_types=1);
 
+// Thiết lập múi giờ mặc định toàn hệ thống là Việt Nam
+date_default_timezone_set('Asia/Ho_Chi_Minh');
+
 define('BASE_PATH', dirname(__DIR__));
 
 // 1. Autoload
@@ -56,13 +59,35 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 // Xử lý path khi chạy trong thư mục con (XAMPP htdocs)
 $scriptName = dirname($_SERVER['SCRIPT_NAME']);
 $scriptName = str_replace('\\', '/', $scriptName);
+if ($scriptName !== '' && !str_starts_with($scriptName, '/')) {
+    $scriptName = '/' . $scriptName;
+}
 if ($scriptName === '/') {
     $scriptName = '';
 }
-define('BASE_URL', $scriptName);
+
+// Xác định thư mục gốc của project (bỏ /public)
+$projectDir = dirname($scriptName);
+$projectDir = str_replace('\\', '/', $projectDir);
+if ($projectDir !== '' && !str_starts_with($projectDir, '/')) {
+    $projectDir = '/' . $projectDir;
+}
+if ($projectDir === '/') {
+    $projectDir = '';
+}
+
+// Cố định BASE_URL thành đường dẫn tuyệt đối đầy đủ theo yêu cầu
+define('BASE_URL', $_ENV['APP_URL'] ?? 'http://localhost:8000');
 
 if ($scriptName !== '' && str_starts_with($uri, $scriptName)) {
     $uri = substr($uri, strlen($scriptName));
+} elseif ($projectDir !== '' && str_starts_with($uri, $projectDir)) {
+    $uri = substr($uri, strlen($projectDir));
+}
+
+// Bỏ phần /public nếu nó vô tình dính vào (ví dụ /public/login)
+if (str_starts_with($uri, '/public')) {
+    $uri = substr($uri, 7);
 }
 
 if ($uri === '') {

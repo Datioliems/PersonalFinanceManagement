@@ -41,17 +41,22 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                     </div>
 
                     <div class="row g-3 mb-4">
-                        <div class="col-6">
-                            <label class="form-label fw-medium">Màu sắc</label>
-                            <input type="color" name="color" class="form-control form-control-color w-100"
-                                   value="<?= htmlspecialchars($cat['color'] ?? '#6b7280', ENT_QUOTES) ?>">
+                        <div class="col-auto">
+                            <label for="editCatColor" class="form-label fw-medium">Màu sắc</label>
+                            <input type="color" id="editCatColor" name="color" class="form-control form-control-color"
+                                   value="<?= htmlspecialchars($cat['color'] ?? '#6b7280', ENT_QUOTES) ?>" style="height: 38px; width: 60px;">
                         </div>
-                        <div class="col-6">
-                            <label class="form-label fw-medium">Icon Bootstrap</label>
-                            <input type="text" name="icon" class="form-control"
-                                   placeholder="bi-cup-hot" value="<?= htmlspecialchars($cat['icon'] ?? '', ENT_QUOTES) ?>">
-                            <div class="form-text">
-                                <a href="https://icons.getbootstrap.com" target="_blank">Xem danh sách icon</a>
+                        <div class="col">
+                            <label for="editCatIcon" class="form-label fw-medium">Icon</label>
+                            <div class="input-group" style="cursor:pointer" data-icon-picker="editCatIcon">
+                                <span class="input-group-text bg-white border-end-0 px-2" id="editIconPreviewBox" style="color: <?= htmlspecialchars($cat['color'] ?? '#6b7280', ENT_QUOTES) ?>">
+                                    <i class="<?= htmlspecialchars($cat['icon'] ?? 'bi-tag', ENT_QUOTES) ?>" id="editIconPreviewEl"></i>
+                                </span>
+                                <input type="text" id="editCatIcon" name="icon" class="form-control border-start-0 border-end-0 ps-0"
+                                       placeholder="Chọn icon..." value="<?= htmlspecialchars($cat['icon'] ?? '', ENT_QUOTES) ?>" autocomplete="off" readonly style="cursor: pointer; background-color: #fff;">
+                                <span class="input-group-text bg-white text-muted border-start-0">
+                                    <i class="bi bi-chevron-down" style="font-size: .8rem"></i>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -69,4 +74,27 @@ require BASE_PATH . '/app/Views/partials/layout.php';
     </div>
 </div>
 
-<?php require BASE_PATH . '/app/Views/partials/footer.php'; ?>
+<?php ob_start(); ?>
+<script>
+(function() {
+    const colorInput = document.getElementById('editCatColor');
+    const iconBox    = document.getElementById('editIconPreviewBox');
+    const iconInput  = document.getElementById('editCatIcon');
+    const iconEl     = document.getElementById('editIconPreviewEl');
+
+    if (colorInput && iconBox) {
+        colorInput.addEventListener('input', e => iconBox.style.color = e.target.value);
+    }
+    
+    if (iconInput && iconEl) {
+        iconInput.addEventListener('input', e => {
+            let cls = e.target.value.trim() || 'bi-tag';
+            iconEl.className = cls.startsWith('bi-') ? 'bi ' + cls : 'bi bi-tag';
+        });
+    }
+})();
+</script>
+<?php 
+$extraJs = ob_get_clean();
+require BASE_PATH . '/app/Views/partials/footer.php'; 
+?>

@@ -5,7 +5,9 @@
 // Biến nhận từ AuthController::showLogin():
 //   $csrf — CSRF token (string)
 // ============================================================
+/** @var string $csrf */
 $pageTitle = 'Đăng nhập';
+$extraCss  = BASE_URL . '/css/auth.css';
 require BASE_PATH . '/app/Views/partials/layout.php';
 ?>
 

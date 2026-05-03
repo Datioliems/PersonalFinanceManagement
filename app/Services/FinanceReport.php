@@ -51,6 +51,23 @@ class FinanceReport
         ];
     }
 
+    /**
+     * Tổng hợp thu/chi trong khoảng thời gian.
+     */
+    public function generateRange(string $startDate, string $endDate, int $userId): array
+    {
+        $summary = $this->repo->getSummaryByRange($userId, $startDate, $endDate);
+
+        $income  = (float)($summary['income']  ?? 0);
+        $expense = (float)($summary['expense'] ?? 0);
+
+        return [
+            'income'  => $income,
+            'expense' => $expense,
+            'balance' => $income - $expense,
+        ];
+    }
+
     // ── getByCategory() ──────────────────────────────────────
     /**
      * Chi tiêu theo từng danh mục trong tháng — cho biểu đồ tròn.
@@ -163,5 +180,66 @@ class FinanceReport
         }
 
         fclose($output);
+    }
+    /**
+     * Xuất CSV theo kỳ chọn (dùng cho trang Báo cáo).
+     * Format: 1 dòng header, các dòng giao dịch — giống file mẫu.
+     * Tên file: Bao-cao-YYYY-MM-DD_YYYY-MM-DD.csv
+     */
+    public function exportCsvByRange(string $dateFrom, string $dateTo, int $userId): void
+    {
+        $rows     = $this->repo->findFiltered($userId, '', 'date_asc', $dateFrom, $dateTo, 9999, 0, 0);
+        $filename = 'Bao-cao-'.$dateFrom.'_'.$dateTo.'.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="'.$filename.'"');
+        header('Cache-Control: no-cache');
+        echo "\xEF\xBB\xBF"; // BOM UTF-8
+
+        $out = fopen('php://output', 'w');
+        // Dòng header: in đậm căn giữa (theo yêu cầu ảnh 1)
+        fputcsv($out, ['Ngày', 'Loại', 'Danh mục', 'Số tiền (đ)', 'Ghi chú']);
+        foreach ($rows as $row) {
+            fputcsv($out, [
+                date('d/m/Y', strtotime($row['trans_date'])), // d/m/Y tránh ### trong Excel
+                $row['type'] === 'income' ? 'Thu nhập' : 'Chi tiêu',
+                $row['category_name'] ?? '',
+                (int)round((float)$row['amount']),            // số nguyên, tránh mất số 0
+                $row['note'] ?? '',
+            ]);
+        }
+        fclose($out);
+
+    }
+
+    /**
+     * Xuất CSV tháng hiện tại (dùng cho Dashboard).
+     * Tên file: Bao-cao-YYYY-thang-MM.csv
+     */
+    public function exportCsvDashboard(string $dateFrom, string $dateTo, int $userId): void
+    {
+        $rows     = $this->repo->findFiltered($userId, '', 'date_asc', $dateFrom, $dateTo, 9999, 0, 0);
+        $month    = date('m', strtotime($dateFrom));
+        $year     = date('Y', strtotime($dateFrom));
+        $filename = 'Bao-cao-'.$year.'-thang-'.$month.'.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="'.$filename.'"');
+        header('Cache-Control: no-cache');
+        echo "\xEF\xBB\xBF"; // BOM UTF-8
+
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['Ngày', 'Loại', 'Danh mục', 'Số tiền (đ)', 'Ghi chú']);
+        foreach ($rows as $row) {
+            fputcsv($out, [
+                date('d/m/Y', strtotime($row['trans_date'])),
+                $row['type'] === 'income' ? 'Thu nhập' : 'Chi tiêu',
+                $row['category_name'] ?? '',
+                (int)round((float)$row['amount']),
+                $row['note'] ?? '',
+            ]);
+        }
+        fclose($out);
+
     }
 }

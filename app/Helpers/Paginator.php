@@ -61,54 +61,90 @@ class Paginator
     }
 
     /**
-     * Render HTML phân trang Bootstrap.
-     * Dùng trực tiếp trong View.
+     * Render HTML phân trang hiện đại (class .pager-*).
+     * CSS định nghĩa tại: public/css/transactions.css
      */
-    public function render(string $basePath): string
+    public function render(string $basePath, bool $alwaysShow = false): string
     {
-        if ($this->getTotalPages() <= 1) {
-            return '';
+        $totalPages  = $this->getTotalPages();
+        $currentPage = $this->currentPage;
+
+        // Ẩn nếu chỉ có 1 trang (trừ khi alwaysShow = true)
+        if ($totalPages <= 1 && !$alwaysShow) return '';
+
+        $html  = '<nav class="pager-wrap" aria-label="Phân trang">';
+
+        /* ── Thông tin tóm tắt ── */
+        $from = ($currentPage - 1) * $this->perPage + 1;
+        $to   = min($currentPage * $this->perPage, $this->total);
+        $html .= '<span class="pager-info">'
+               . number_format($from) . '–' . number_format($to)
+               . ' / ' . number_format($this->total) . ' kết quả'
+               . '</span>';
+
+        /* ── Danh sách nút ── */
+        $html .= '<ul class="pager-list">';
+
+        /* Nút Prev */
+        if ($this->hasPrevious()) {
+            $html .= '<li><a class="pager-btn" href="'
+                   . htmlspecialchars($this->buildUrl($basePath, $currentPage - 1))
+                   . '" aria-label="Trang trước">'
+                   . '<i class="bi bi-chevron-left"></i>'
+                   . '</a></li>';
+        } else {
+            $html .= '<li><span class="pager-btn pager-disabled" aria-disabled="true">'
+                   . '<i class="bi bi-chevron-left"></i>'
+                   . '</span></li>';
         }
 
-        $html  = '<nav aria-label="Phân trang"><ul class="pagination justify-content-center mb-0">';
-
-        // Nút Trước
-        $html .= '<li class="page-item ' . ($this->hasPrevious() ? '' : 'disabled') . '">';
-        $html .= '<a class="page-link" href="'
-               . ($this->hasPrevious() ? htmlspecialchars($this->buildUrl($basePath, $this->currentPage - 1)) : '#')
-               . '">&laquo;</a></li>';
-
-        // Nút trang
-        $start = max(1, $this->currentPage - 2);
-        $end   = min($this->getTotalPages(), $this->currentPage + 2);
+        /* Số trang — window ±2 quanh trang hiện tại */
+        $start = max(1, $currentPage - 2);
+        $end   = min($totalPages, $currentPage + 2);
 
         if ($start > 1) {
-            $html .= '<li class="page-item"><a class="page-link" href="'
+            $html .= '<li><a class="pager-btn" href="'
                    . htmlspecialchars($this->buildUrl($basePath, 1)) . '">1</a></li>';
-            if ($start > 2) $html .= '<li class="page-item disabled"><span class="page-link">…</span></li>';
+            if ($start > 2) {
+                $html .= '<li><span class="pager-ellipsis">…</span></li>';
+            }
         }
 
         for ($i = $start; $i <= $end; $i++) {
-            $active = $i === $this->currentPage ? 'active' : '';
-            $html .= '<li class="page-item ' . $active . '">';
-            $html .= '<a class="page-link" href="' . htmlspecialchars($this->buildUrl($basePath, $i)) . '">' . $i . '</a>';
-            $html .= '</li>';
+            if ($i === $currentPage) {
+                $html .= '<li><span class="pager-btn pager-active" aria-current="page">'
+                       . $i . '</span></li>';
+            } else {
+                $html .= '<li><a class="pager-btn" href="'
+                       . htmlspecialchars($this->buildUrl($basePath, $i)) . '">'
+                       . $i . '</a></li>';
+            }
         }
 
-        if ($end < $this->getTotalPages()) {
-            if ($end < $this->getTotalPages() - 1) $html .= '<li class="page-item disabled"><span class="page-link">…</span></li>';
-            $html .= '<li class="page-item"><a class="page-link" href="'
-                   . htmlspecialchars($this->buildUrl($basePath, $this->getTotalPages()))
-                   . '">' . $this->getTotalPages() . '</a></li>';
+        if ($end < $totalPages) {
+            if ($end < $totalPages - 1) {
+                $html .= '<li><span class="pager-ellipsis">…</span></li>';
+            }
+            $html .= '<li><a class="pager-btn" href="'
+                   . htmlspecialchars($this->buildUrl($basePath, $totalPages)) . '">'
+                   . $totalPages . '</a></li>';
         }
 
-        // Nút Sau
-        $html .= '<li class="page-item ' . ($this->hasNext() ? '' : 'disabled') . '">';
-        $html .= '<a class="page-link" href="'
-               . ($this->hasNext() ? htmlspecialchars($this->buildUrl($basePath, $this->currentPage + 1)) : '#')
-               . '">&raquo;</a></li>';
+        /* Nút Next */
+        if ($this->hasNext()) {
+            $html .= '<li><a class="pager-btn" href="'
+                   . htmlspecialchars($this->buildUrl($basePath, $currentPage + 1))
+                   . '" aria-label="Trang sau">'
+                   . '<i class="bi bi-chevron-right"></i>'
+                   . '</a></li>';
+        } else {
+            $html .= '<li><span class="pager-btn pager-disabled" aria-disabled="true">'
+                   . '<i class="bi bi-chevron-right"></i>'
+                   . '</span></li>';
+        }
 
-        $html .= '</ul></nav>';
+        $html .= '</ul>';
+        $html .= '</nav>';
         return $html;
     }
 }
