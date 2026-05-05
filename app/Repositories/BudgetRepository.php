@@ -20,6 +20,12 @@ interface BudgetRepositoryInterface
     public function findByCategoryAndMonth(int $userId, int $categoryId, int $month, int $year): ?\App\Models\Budget;
     public function upsert(array $data): bool;
     public function deleteByIdAndUser(int $id, int $userId): bool;
+
+    // Kiểm tra tồn tại hạn mức cho danh mục/tháng/năm
+    public function existsForCategoryMonth(int $userId, int $categoryId, int $month, int $year): bool;
+
+    // Cập nhật hoặc tạo nhiều bản ghi (bulk upsert)
+    public function bulkUpsert(array $rows): bool;
 }
 
 // ── Implementation ────────────────────────────────────────────
@@ -116,5 +122,71 @@ class BudgetRepository extends BaseRepository implements BudgetRepositoryInterfa
         );
         $stmt->execute([$id, $userId]);
         return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Kiểm tra xem đã tồn tại bản ghi ngân sách cho user/category/month/year hay chưa.
+     * Trả về true nếu đã có, false nếu chưa.
+     *
+     * @param int $userId
+     * @param int $categoryId
+     * @param int $month
+     * @param int $year
+     * @return bool
+     */
+    public function existsForCategoryMonth(int $userId, int $categoryId, int $month, int $year): bool
+    {
+        $stmt = $this->db->prepare(
+            'SELECT 1 FROM budgets
+             WHERE user_id = :uid
+               AND category_id = :cid
+               AND month = :month
+               AND year  = :year
+             LIMIT 1'
+        );
+        $stmt->execute([
+            ':uid'   => $userId,
+            ':cid'   => $categoryId,
+            ':month' => $month,
+            ':year'  => $year,
+        ]);
+        return (bool)$stmt->fetchColumn();
+    }
+
+    /**
+     * Bulk upsert: nhận mảng các bản ghi và chạy INSERT ... ON DUPLICATE cho từng dòng.
+     * Lưu ý: không bắt transaction ở đây → caller (Service) phải quản lý transaction.
+     *
+     * @param array $rows Mỗi phần tử là mảng có keys: user_id, category_id, limit_amount, alert_threshold, month, year
+     * @return bool true nếu chạy xong (không kiểm tra từng row chi tiết)
+     */
+    public function bulkUpsert(array $rows): bool
+    {
+        if (empty($rows)) {
+            return true;
+        }
+
+        $stmt = $this->db->prepare(
+            'INSERT INTO budgets
+                (user_id, category_id, limit_amount, alert_threshold, month, year)
+             VALUES
+                (:uid, :cid, :limit, :threshold, :month, :year)
+             ON DUPLICATE KEY UPDATE
+                limit_amount    = VALUES(limit_amount),
+                alert_threshold = VALUES(alert_threshold)'
+        );
+
+        foreach ($rows as $r) {
+            $stmt->execute([
+                ':uid'       => $r['user_id'],
+                ':cid'       => $r['category_id'],
+                ':limit'     => $r['limit_amount'],
+                ':threshold' => $r['alert_threshold'] ?? 80,
+                ':month'     => $r['month'],
+                ':year'      => $r['year'],
+            ]);
+        }
+
+        return true;
     }
 }

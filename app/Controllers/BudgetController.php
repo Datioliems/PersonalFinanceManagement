@@ -68,6 +68,8 @@ class BudgetController extends BaseController
     // ── POST /budget ──────────────────────────────────────────
     /**
      * Đặt hoặc cập nhật hạn mức ngân sách.
+     * Nếu checkbox 'apply_to_end_of_year' được chọn, sẽ áp dụng
+     * hạn mức cho tất cả các tháng còn lại trong năm.
      */
     public function setLimit(): void
     {
@@ -77,12 +79,13 @@ class BudgetController extends BaseController
         }
         CsrfTokenManager::invalidate();
 
-        $uid         = $this->currentUserId();
-        $categoryId  = (int)($_POST['category_id']     ?? 0);
-        $limitAmount = (float)($_POST['limit_amount']   ?? 0);
-        $threshold   = (int)($_POST['alert_threshold']  ?? 80);
-        $month       = (int)($_POST['month']            ?? date('n'));
-        $year        = (int)($_POST['year']             ?? date('Y'));
+        $uid             = $this->currentUserId();
+        $categoryId      = (int)($_POST['category_id']     ?? 0);
+        $limitAmount     = (float)($_POST['limit_amount']   ?? 0);
+        $threshold       = (int)($_POST['alert_threshold']  ?? 80);
+        $month           = (int)($_POST['month']            ?? date('n'));
+        $year            = (int)($_POST['year']             ?? date('Y'));
+        $applyToEndOfYear = isset($_POST['apply_to_end_of_year']) && $_POST['apply_to_end_of_year'] == '1';
 
         // Validate
         if ($categoryId <= 0) {
@@ -91,9 +94,18 @@ class BudgetController extends BaseController
         }
 
         try {
-            $this->budgetService->setLimit($uid, $categoryId, $limitAmount, $month, $year, $threshold);
-            FlashMessage::set('success', 'Đã cập nhật ngân sách.');
+            // Nếu checkbox được chọn, dùng updateMonthlyBudget()
+            if ($applyToEndOfYear) {
+                $this->budgetService->updateMonthlyBudget($uid, $categoryId, $limitAmount, $month, $year, true);
+                FlashMessage::set('success', 'Đã cập nhật ngân sách cho tháng ' . $month . ' và tất cả các tháng còn lại năm ' . $year . '.');
+            } else {
+                // Nếu không chọn, chỉ cập nhật tháng được chọn
+                $this->budgetService->setLimit($uid, $categoryId, $limitAmount, $month, $year, $threshold);
+                FlashMessage::set('success', 'Đã cập nhật ngân sách.');
+            }
         } catch (\InvalidArgumentException $e) {
+            FlashMessage::set('danger', $e->getMessage());
+        } catch (\RuntimeException $e) {
             FlashMessage::set('danger', $e->getMessage());
         }
 

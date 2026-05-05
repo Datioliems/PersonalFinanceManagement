@@ -273,7 +273,7 @@ $avatarChar = mb_strtoupper(mb_substr($username, 0, 1) ?: 'U');
         </ul>
 
         <!-- Desktop user dropdown -->
-        <!-- <div class="nav-user dropdown">
+         <div class="nav-user dropdown">
             <a class="nav-user-btn dropdown-toggle"
                href="#" id="userDropdown"
                data-bs-toggle="dropdown"
@@ -297,7 +297,7 @@ $avatarChar = mb_strtoupper(mb_substr($username, 0, 1) ?: 'U');
                     </a>
                 </li>
             </ul>
-        </div> -->
+        </div> 
 
         <!-- Hamburger (mobile) -->
         <button class="nav-toggler" id="navToggler"
@@ -321,14 +321,14 @@ $avatarChar = mb_strtoupper(mb_substr($username, 0, 1) ?: 'U');
 <!-- ── Mobile drawer ────────────────────────────────────── -->
 <div class="nav-mobile-panel" id="mobilePanel" aria-hidden="true">
 
-    <!-- User info
+    <!-- User info -->
     <div class="mobile-user-section">
         <span class="mobile-user-avatar"><?= $avatarChar ?></span>
         <div>
             <span class="mobile-user-name"><?= $username ?></span>
             <span class="mobile-user-sub">Tài khoản cá nhân</span>
         </div>
-    </div> -->
+    </div> 
 
     <!-- Nav items -->
     <ul class="mobile-nav-list">
@@ -356,9 +356,9 @@ $avatarChar = mb_strtoupper(mb_substr($username, 0, 1) ?: 'U');
 
     <div class="mobile-divider"></div>
 
-    <!-- <a class="mobile-logout" href="<?= BASE_URL ?>/logout">
+     <a class="mobile-logout" href="<?= BASE_URL ?>/logout">
         <i class="bi bi-box-arrow-right"></i> Đăng xuất
-    </a> -->
+    </a> 
 </div>
 <!-- Backdrop mờ -->
 <div class="nav-backdrop" id="navBackdrop"></div>
