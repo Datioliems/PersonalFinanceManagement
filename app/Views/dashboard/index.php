@@ -1,5 +1,15 @@
 <?php
-$pageTitle = 'Dashboard';
+/**
+ * Biến nhận từ DashboardController::index():
+ * @var array  $summary
+ * @var float  $walletBalance
+ * @var string $chartJson
+ * @var int    $month
+ * @var int    $year
+ * @var string $pageTitle
+ * @var bool   $needChartJs
+ */
+$pageTitle = $pageTitle ?? 'Dashboard';
 $extraCss  = BASE_URL . '/css/dashboard.css';
 require BASE_PATH . '/app/Views/partials/layout.php';
 

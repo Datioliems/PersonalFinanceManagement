@@ -3,7 +3,11 @@
 // VIEW — app/Views/categories/index.php
 // ============================================================
 // Biến nhận từ CategoryController::index() qua extract():
-/** @var array  $cats  — danh sách danh mục hiện trang */
+/** @var array  $cats  — toàn bộ danh mục (cho form) */
+/** @var array  $expenseCats — danh mục chi tiêu (phân trang) */
+/** @var array  $incomeCats  — danh mục thu nhập (phân trang) */
+/** @var array  $bothCats    — danh mục chung (phân trang) */
+/** @var bool   $hasAny      — có bất kỳ danh mục nào không */
 /** @var string $csrf  — CSRF token (one-time) */
 /** @var \App\Helpers\Paginator $pager — đối tượng phân trang */
 // ============================================================

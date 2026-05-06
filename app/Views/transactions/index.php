@@ -282,7 +282,7 @@ $periodLabel = date('d/m/Y', strtotime($startDate)) . ' – ' . date('d/m/Y', st
                 <tbody>
                 <?php foreach ($dailySummary as $d): $bal = (float)$d['balance']; ?>
                 <tr>
-                    <td class="text-center"><a href="<?= BASE_URL ?>/transactions?start_date=<?= $d['trans_date'] ?>&end_date=<?= $d['trans_date'] ?>" class="text-decoration-none fw-medium"><?= htmlspecialchars($d['trans_date']) ?></a></td>
+                    <td class="text-center"><a href="<?= BASE_URL ?>/transactions?start_date=<?= $d['trans_date'] ?>&end_date=<?= $d['trans_date'] ?>" class="text-decoration-none text-muted small"><?= htmlspecialchars($d['trans_date']) ?></a></td>
                     <td class="text-center text-muted small"><?= $d['total_tx'] ?></td>
                     <td class="text-center text-success"><?= $d['income']  > 0 ? '+'.number_format($d['income'], 0,',','.').'đ'  : '—' ?></td>
                     <td class="text-center text-danger"> <?= $d['expense'] > 0 ? '-'.number_format($d['expense'],0,',','.').'đ' : '—' ?></td>

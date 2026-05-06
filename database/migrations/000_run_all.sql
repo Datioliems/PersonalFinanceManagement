@@ -36,3 +36,6 @@ SOURCE 003_create_transactions.sql;
 
 SELECT 'Migration hoàn tất!' AS status;
 SHOW TABLES;
+
+-- Guest account (chạy khi AUTH_ENABLED=false)
+SOURCE database/migrations/005_create_guest_user.sql;

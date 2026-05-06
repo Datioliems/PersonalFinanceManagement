@@ -5,6 +5,38 @@ class UserRepository extends BaseRepository
 {
     protected function getTable(): string { return 'users'; }
 
+    // ── GUEST ACCOUNT ─────────────────────────────────────────
+
+    /**
+     * Tìm user theo ID — dùng bởi AuthMiddleware::setGuestSession()
+     */
+    public function findById(int $id): ?array
+    {
+        $s = $this->db->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
+        $s->execute([$id]);
+        return $s->fetch() ?: null;
+    }
+
+    /**
+     * Tạo guest account nếu chưa tồn tại.
+     * Dùng INSERT IGNORE để tránh duplicate nếu gọi nhiều lần.
+     */
+    public function saveGuest(array $data): int
+    {
+        $s = $this->db->prepare(
+            'INSERT IGNORE INTO users (username, email, password_hash, email_verified, is_active)
+             VALUES (:username, :email, :password_hash, :email_verified, :is_active)'
+        );
+        $s->execute([
+            ':username'       => $data['username'],
+            ':email'          => $data['email'],
+            ':password_hash'  => $data['password_hash'],
+            ':email_verified' => $data['email_verified'] ?? 1,
+            ':is_active'      => $data['is_active'] ?? 1,
+        ]);
+        return (int)$this->db->lastInsertId() ?: 1;
+    }
+
     // ── READ ──────────────────────────────────────────────────
     public function findByUsername(string $username): ?array
     {
@@ -38,14 +70,15 @@ class UserRepository extends BaseRepository
     public function save(array $data): int
     {
         $s = $this->db->prepare(
-            'INSERT INTO users (username, email, password_hash, email_verify_token)
-             VALUES (:username, :email, :password_hash, :token)'
+            'INSERT INTO users (username, email, password_hash, email_verify_token, email_verified)
+             VALUES (:username, :email, :password_hash, :token, :email_verified)'
         );
         $s->execute([
-            ':username'      => $data['username'],
-            ':email'         => $data['email'],
-            ':password_hash' => $data['password_hash'],
-            ':token'         => $data['email_verify_token'] ?? null,
+            ':username'         => $data['username'],
+            ':email'            => $data['email'],
+            ':password_hash'    => $data['password_hash'],
+            ':token'            => $data['email_verify_token'] ?? null,
+            ':email_verified'   => $data['email_verified'] ?? 0,
         ]);
         return (int) $this->db->lastInsertId();
     }

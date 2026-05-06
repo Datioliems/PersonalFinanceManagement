@@ -11,8 +11,12 @@
 
 namespace App\Services;
 
-// Ưu tiên Composer; fallback về wrapper tự viết
-if (file_exists(BASE_PATH . '/vendor/autoload.php')) {
+// Ưu tiên PHPMailer thật (clone từ GitHub), rồi Composer, rồi wrapper fallback
+if (file_exists(BASE_PATH . '/vendor/phpmailer/src/PHPMailer.php')) {
+    require_once BASE_PATH . '/vendor/phpmailer/src/Exception.php';
+    require_once BASE_PATH . '/vendor/phpmailer/src/PHPMailer.php';
+    require_once BASE_PATH . '/vendor/phpmailer/src/SMTP.php';
+} elseif (file_exists(BASE_PATH . '/vendor/autoload.php')) {
     require_once BASE_PATH . '/vendor/autoload.php';
 } else {
     require_once BASE_PATH . '/vendor/phpmailer/PHPMailer.php';

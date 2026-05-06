@@ -93,7 +93,12 @@ class AuthController extends BaseController
         if ($password !== $confirm)                             $fieldErrors['confirm'][]  = 'Hai mật khẩu không khớp.';
 
         if (!empty($fieldErrors)) {
-            $_SESSION['_register_old']    = ['username' => $username, 'email' => $email];
+                $_SESSION['_register_old']    = [
+                    'username'         => $username,
+                    'email'            => $email,
+                    'password'         => $password,
+                    'password_confirm' => $confirm,
+                ];
             $_SESSION['_register_errors'] = $fieldErrors;
             $this->redirect(BASE_URL . '/register');
         }
@@ -101,14 +106,17 @@ class AuthController extends BaseController
         try {
             $userId = $this->auth->register($username, $email, $password);
 
-            // Tự động đăng nhập
-            $_SESSION['user_id']  = $userId;
-            $_SESSION['username'] = $username;
-
-            FlashMessage::set('success', '✅ Đăng ký thành công! Bạn đã được đăng nhập.');
-            $this->redirect(BASE_URL . '/dashboard');
+            // Không tự động đăng nhập — yêu cầu xác nhận email trước
+            FlashMessage::set('success', '✅ Đăng ký thành công! Kiểm tra email để xác nhận tài khoản.');
+            $_SESSION['_login_prefill_username'] = $username;
+            $this->redirect(BASE_URL . '/login');
         } catch (\RuntimeException $e) {
-            $_SESSION['_register_old']    = ['username' => $username, 'email' => $email];
+                $_SESSION['_register_old']    = [
+                    'username'         => $username,
+                    'email'            => $email,
+                    'password'         => $password,
+                    'password_confirm' => $confirm,
+                ];
             $_SESSION['_register_errors'] = ['username' => [$e->getMessage()]];
             $this->redirect(BASE_URL . '/register');
         }
