@@ -228,6 +228,12 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                         <i class="bi bi-info-circle me-1"></i>
                         Hạn mức sẽ được áp dụng cho toàn bộ tháng <?= $month ?>/<?= $year ?>.
                     </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="apply_to_end_of_year" value="1" id="checkApplyToEndOfYear">
+                        <label class="form-check-label" for="checkApplyToEndOfYear">
+                            Áp dụng hạn mức này cho tất cả các tháng còn lại trong năm
+                        </label>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary"
@@ -274,6 +280,12 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                         </label>
                         <input type="range" name="alert_threshold" class="form-range" min="10" max="100" step="5" value="<?= (int)$row['alert_threshold'] ?>"
                                oninput="document.getElementById('editThresholdVal<?= (int)$row['id'] ?>').textContent = this.value + '%'">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="apply_to_end_of_year" value="1" id="checkApplyToEndOfYearEdit<?= (int)$row['id'] ?>">
+                        <label class="form-check-label" for="checkApplyToEndOfYearEdit<?= (int)$row['id'] ?>">
+                            Áp dụng hạn mức này cho tất cả các tháng còn lại trong năm
+                        </label>
                     </div>
                 </div>
                 <div class="modal-footer">

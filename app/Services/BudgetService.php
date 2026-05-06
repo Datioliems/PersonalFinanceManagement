@@ -18,6 +18,7 @@ use App\Models\Budget;
 use App\Repositories\BudgetRepository;
 use App\Repositories\BudgetRepositoryInterface;
 use App\Repositories\TransactionRepository;
+use App\Core\Database;
 
 class BudgetService
 {
@@ -96,6 +97,85 @@ class BudgetService
             'month'           => $month,
             'year'            => $year,
         ]);
+    }
+
+    // ── updateMonthlyBudget() ─────────────────────────────────
+    /**
+     * Cập nhật ngân sách cho 1 tháng. Nếu $applyToEndOfYear == true
+     * sẽ áp dụng giá trị này cho tất cả các tháng còn lại trong năm.
+     * Toàn bộ thao tác được bọc trong một Transaction để đảm bảo tính toàn vẹn.
+     *
+     * @param int   $userId
+     * @param int   $categoryId
+     * @param float $amount
+     * @param int   $month 1-12
+     * @param int   $year
+     * @param bool  $applyToEndOfYear
+     * @return bool
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
+     */
+    public function updateMonthlyBudget(
+        int $userId,
+        int $categoryId,
+        float $amount,
+        int $month,
+        int $year,
+        bool $applyToEndOfYear
+    ): bool {
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Số tiền ngân sách phải lớn hơn 0.');
+        }
+        if ($month < 1 || $month > 12) {
+            throw new \InvalidArgumentException('Tháng không hợp lệ (1-12).');
+        }
+        if ($year <= 0) {
+            // Nếu năm không hợp lệ thì lấy năm hiện tại
+            $year = (int)date('Y');
+        }
+
+        $pdo = Database::getInstance();
+
+        try {
+            $pdo->beginTransaction();
+
+            // Cập nhật tháng được chọn
+            $this->budgetRepo->upsert([
+                'user_id'         => $userId,
+                'category_id'     => $categoryId,
+                'limit_amount'    => $amount,
+                'alert_threshold' => 80,
+                'month'           => $month,
+                'year'            => $year,
+            ]);
+
+            // Nếu cần áp dụng cho các tháng còn lại trong năm
+            if ($applyToEndOfYear) {
+                $rows = [];
+                for ($m = $month + 1; $m <= 12; $m++) {
+                    $rows[] = [
+                        'user_id'         => $userId,
+                        'category_id'     => $categoryId,
+                        'limit_amount'    => $amount,
+                        'alert_threshold' => 80,
+                        'month'           => $m,
+                        'year'            => $year,
+                    ];
+                }
+
+                if (!empty($rows)) {
+                    $this->budgetRepo->bulkUpsert($rows);
+                }
+            }
+
+            $pdo->commit();
+            return true;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new \RuntimeException('Lỗi khi cập nhật ngân sách: ' . $e->getMessage());
+        }
     }
 
     // ── getBudgetSummary() ────────────────────────────────────
