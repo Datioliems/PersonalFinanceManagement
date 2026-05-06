@@ -5,7 +5,7 @@ use App\Repositories\UserRepository;
 
 interface Authenticatable
 {
-    public function login(string $username, string $password): bool;
+    public function login(string $identifier, string $password): bool;
     public function logout(): void;
     public function isLoggedIn(): bool;
     public function currentUserId(): ?int;
@@ -21,8 +21,9 @@ class AuthService implements Authenticatable
     /**
      * @throws \RuntimeException với message hiển thị cho user
      */
-    public function login(string $username, string $password): bool
+    public function login(string $identifier, string $password): bool
     {
+        $identifier = trim($identifier);
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
         // Chặn brute-force theo IP (>30 lần trong 15 phút)
@@ -30,9 +31,11 @@ class AuthService implements Authenticatable
             throw new \RuntimeException('Quá nhiều lần thử từ IP này. Thử lại sau 15 phút.');
         }
 
-        $user = $this->userRepo->findByUsername($username);
+        $user = $this->userRepo->findByUsername($identifier)
+             ?? $this->userRepo->findByEmail($identifier);
+
         if (!$user) {
-            $this->userRepo->logLogin(null, $username, $ip, 'failed');
+            $this->userRepo->logLogin(null, $identifier, $ip, 'failed');
             return false;
         }
 
@@ -45,17 +48,17 @@ class AuthService implements Authenticatable
         }
 
         if (!($user['is_active'] ?? 1)) {
-            $this->userRepo->logLogin($uid, $username, $ip, 'failed');
+            $this->userRepo->logLogin($uid, $identifier, $ip, 'failed');
             throw new \RuntimeException('Tài khoản đã bị khoá.');
         }
 
         if (!($user['email_verified'] ?? 0)) {
-            $this->userRepo->logLogin($uid, $username, $ip, 'failed');
+            $this->userRepo->logLogin($uid, $identifier, $ip, 'failed');
             throw new \RuntimeException('Email chưa được xác nhận. Kiểm tra hộp thư và bấm link xác nhận.');
         }
 
         if (!password_verify($password, $user['password_hash'])) {
-            $this->userRepo->logLogin($uid, $username, $ip, 'failed');
+            $this->userRepo->logLogin($uid, $identifier, $ip, 'failed');
             $this->userRepo->incrementFailedAttempts($uid);
             $remaining = max(0, 4 - (int)($user['login_attempts'] ?? 0));
             if ($remaining > 0) {
@@ -68,7 +71,7 @@ class AuthService implements Authenticatable
         session_regenerate_id(true);
         $_SESSION['user_id']  = $uid;
         $_SESSION['username'] = $user['username'];
-        $this->userRepo->logLogin($uid, $username, $ip, 'success');
+        $this->userRepo->logLogin($uid, $user['username'], $ip, 'success');
         return true;
     }
 

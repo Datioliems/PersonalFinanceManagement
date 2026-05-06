@@ -12,6 +12,10 @@ class Router
 {
     private array $routes = [];
 
+    public function __construct(private Container $container)
+    {
+    }
+
     public function get(string $path, array $handler, array $middleware = []): void
     {
         $this->routes[] = ['GET', $path, $handler, $middleware];
@@ -36,9 +40,10 @@ class Router
             foreach ($middleware as $mw) {
                 $this->runMiddleware($mw);
             }
-            // Gọi Controller
+            // Gọi Controller thông qua container
             [$class, $action] = $handler;
-            (new $class())->$action(...$params);
+            $controller = $this->container->make($class);
+            $controller->$action(...$params);
             return;
         }
 

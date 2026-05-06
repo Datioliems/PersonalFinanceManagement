@@ -20,9 +20,9 @@ class CategoryController extends BaseController
 {
     private CategoryRepository $catRepo;
 
-    public function __construct()
+    public function __construct(CategoryRepository $catRepo)
     {
-        $this->catRepo = new CategoryRepository();
+        $this->catRepo = $catRepo;
     }
 
     // ── GET /categories ───────────────────────────────────────

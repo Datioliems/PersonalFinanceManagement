@@ -19,13 +19,19 @@ class TransactionController extends BaseController
     private TransactionRepository $txRepo;
     private CategoryRepository    $catRepo;
 
-    public function __construct()
+    public function __construct(
+        TransactionRepository $txRepo,
+        CategoryRepository $catRepo,
+        IncomeService $incomeService,
+        ExpenseService $expenseService,
+        FinanceReport $report
+    )
     {
-        $this->txRepo         = new TransactionRepository();
-        $this->catRepo        = new CategoryRepository();
-        $this->incomeService  = new IncomeService($this->txRepo);
-        $this->expenseService = new ExpenseService($this->txRepo);
-        $this->report         = new FinanceReport($this->txRepo);
+        $this->txRepo         = $txRepo;
+        $this->catRepo        = $catRepo;
+        $this->incomeService  = $incomeService;
+        $this->expenseService = $expenseService;
+        $this->report         = $report;
     }
 
     // ── GET /transactions ──────────────────────────────────────────

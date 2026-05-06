@@ -1,0 +1,29 @@
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependencies
+vendor/
+node_modules/
+
+# Logs
+storage/logs/*
+!storage/logs/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+
+# Migrations (use de13_finance.sql instead)
+database/migrations/
+
+# Cache
+*.cache

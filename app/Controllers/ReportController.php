@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Services\{ReportService, FinanceReport};
 use App\Repositories\TransactionRepository;
 
@@ -9,11 +11,15 @@ class ReportController extends BaseController
     private FinanceReport         $financeReport;
     private TransactionRepository $txRepo;
 
-    public function __construct()
+    public function __construct(
+        TransactionRepository $txRepo,
+        ReportService $reportService,
+        FinanceReport $financeReport
+    )
     {
-        $this->txRepo        = new TransactionRepository();
-        $this->reportService = new ReportService($this->txRepo);
-        $this->financeReport = new FinanceReport($this->txRepo);
+        $this->txRepo        = $txRepo;
+        $this->reportService = $reportService;
+        $this->financeReport = $financeReport;
     }
 
     public function index(): void
@@ -89,12 +95,12 @@ class ReportController extends BaseController
         ]);
     }
 
-    /**
-     * AJAX: danh sách giao dịch của 1 category trong kỳ
-     * GET /report/transactions?category_name=X&date_from=Y&date_to=Z&type=income|expense
-     */
-    public function transactions(): void
-    {
+        /**
+         * GET /report/transactions?category_id=X&date_from=Y&date_to=Z&type=income|expense
+         * Trả JSON cho popup/chi tiết động.
+         */
+        public function transactions(): void
+        {
         $uid        = $this->currentUserId();
         $categoryId = (int)($_GET['category_id'] ?? 0);
         $dateFrom   = $_GET['date_from'] ?? date('Y-m-01');

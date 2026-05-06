@@ -33,10 +33,10 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                     <input type="hidden" name="csrf_token"
                            value="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
 
-                    <!-- Username -->
+                    <!-- Username hoặc Email -->
                     <div class="mb-3">
                         <label for="username" class="form-label fw-medium">
-                            Tên đăng nhập
+                            Tên đăng nhập hoặc email
                         </label>
                         <div class="input-group">
                             <span class="input-group-text bg-white">
@@ -49,7 +49,7 @@ require BASE_PATH . '/app/Views/partials/layout.php';
                                    required
                                    autofocus
                                    autocomplete="username"
-                                   placeholder="Nhập tên đăng nhập"
+                                   placeholder="Nhập tên đăng nhập hoặc email"
                                    value="<?= htmlspecialchars($_POST['username'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                         </div>
                     </div>

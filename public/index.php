@@ -25,6 +25,10 @@ define('BASE_PATH', dirname(__DIR__));
 // 1. Autoload
 require BASE_PATH . '/autoload.php';
 
+// 1.5. Container IoC đơn giản
+$container = new \App\Core\Container();
+$container->bind(\App\Repositories\BudgetRepositoryInterface::class, \App\Repositories\BudgetRepository::class);
+
 // 2. Load .env
 $dotenv = BASE_PATH . '/.env';
 if (file_exists($dotenv)) {
@@ -43,14 +47,12 @@ session_start();
 
 // 4. Auto-login qua Remember Me cookie (TV1 Ngày 6)
 if (!isset($_SESSION['user_id']) && !empty($_COOKIE['remember_token'])) {
-    $authService = new \App\Services\AuthService(
-        new \App\Repositories\UserRepository()
-    );
+    $authService = $container->make(\App\Services\AuthService::class);
     $authService->tryRememberLogin();
 }
 
 // 5. Router + routes
-$router = new \App\Core\Router();
+$router = new \App\Core\Router($container);
 require BASE_PATH . '/routes.php';
 
 // 6. Dispatch

@@ -18,21 +18,14 @@ namespace App\Services;
 
 use App\Models\ExpenseTransaction;
 use App\Services\BudgetService;
-use App\Repositories\{TransactionRepository, BudgetRepository};
+use App\Repositories\TransactionRepository;
 
 class ExpenseService
 {
-    private BudgetService $budgetService;
-
     public function __construct(
-        private TransactionRepository $txRepo
-    ) {
-        // Khởi tạo BudgetService với Dependency Injection
-        $this->budgetService = new BudgetService(
-            new BudgetRepository(),
-            $txRepo
-        );
-    }
+        private TransactionRepository $txRepo,
+        private BudgetService $budgetService
+    ) {}
 
     /**
      * Thêm chi tiêu mới.

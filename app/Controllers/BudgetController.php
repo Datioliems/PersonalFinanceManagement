@@ -13,22 +13,24 @@
 namespace App\Controllers;
 
 use App\Services\BudgetService;
-use App\Repositories\{BudgetRepository, CategoryRepository, TransactionRepository};
+use App\Repositories\{BudgetRepository, CategoryRepository};
 use App\Helpers\{CsrfTokenManager, FlashMessage};
 
 class BudgetController extends BaseController
 {
     private BudgetService      $budgetService;
     private CategoryRepository $catRepo;
+    private BudgetRepository $budgetRepo;
 
-    public function __construct()
+    public function __construct(
+        CategoryRepository $catRepo,
+        BudgetService $budgetService,
+        BudgetRepository $budgetRepo
+    )
     {
-        // Dependency Injection thủ công
-        $this->catRepo       = new CategoryRepository();
-        $this->budgetService = new BudgetService(
-            new BudgetRepository(),
-            new TransactionRepository()
-        );
+        $this->catRepo       = $catRepo;
+        $this->budgetService = $budgetService;
+        $this->budgetRepo    = $budgetRepo;
     }
 
     // ── GET /budget ───────────────────────────────────────────
@@ -121,8 +123,7 @@ class BudgetController extends BaseController
         }
         CsrfTokenManager::invalidate();
 
-        $repo    = new BudgetRepository();
-        $deleted = $repo->deleteByIdAndUser((int)$id, $this->currentUserId());
+        $deleted = $this->budgetRepo->deleteByIdAndUser((int)$id, $this->currentUserId());
 
         FlashMessage::set(
             $deleted ? 'success' : 'warning',

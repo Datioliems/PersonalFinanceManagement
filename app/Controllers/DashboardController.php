@@ -9,11 +9,10 @@ class DashboardController extends BaseController
     private ReportService $reportService;
     private FinanceReport $financeReport;
 
-    public function __construct()
+    public function __construct(ReportService $reportService, FinanceReport $financeReport)
     {
-        $txRepo              = new TransactionRepository();
-        $this->reportService = new ReportService($txRepo);
-        $this->financeReport = new FinanceReport($txRepo);
+        $this->reportService = $reportService;
+        $this->financeReport = $financeReport;
     }
 
     public function index(): void

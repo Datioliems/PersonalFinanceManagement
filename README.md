@@ -1,178 +1,250 @@
-# Đề 13 — Quản lý Tài chính Cá nhân
-### PHP OOP · MVC · Template Method · Repository · Dependency Injection
+# Đề 13 — Quản lý Tài chính Cá nhân (Tóm Tắt)
+
+**Tác giả**: 5 thành viên team  
+**Công nghệ**: PHP 8.2 · MySQL · Bootstrap 5 · Chart.js  
+**Pattern**: MVC · Repository · Template Method · Dependency Injection  
 
 ---
 
-## Cấu trúc dự án
+## 1️⃣ Cài Đặt Nhanh
+
+```powershell
+# 1. Setup .env
+copy .env.example .env
+
+# 2. Import database từ SQL dump
+C:\xampp\mysql\bin\mysql.exe -u root -p < database\de13_finance.sql
+
+# 3. Start server
+C:\xampp\php\php.exe -S localhost:8000 -t public
+```
+
+Mở `http://localhost:8000/register` → Tạo tài khoản → Đăng nhập  
+📄 File `database/de13_finance.sql` chứa toàn bộ schema và dữ liệu mẫu
+
+---
+
+## 2️⃣ Cấu Trúc Thư Mục
 
 ```
-de13_finance/
-│
-├── autoload.php              ← PSR-4 autoload (không cần Composer)
-├── routes.php                ← Tất cả routes của 5 thành viên
-├── .env.example              ← Mẫu cấu hình môi trường
-│
-├── public/                   ← Document root (trỏ web server vào đây)
-│   ├── index.php             ← ENTRY POINT duy nhất (Front Controller)
-│   ├── .htaccess             ← Apache rewrite → index.php
-│   └── js/app.js
-│
-├── config/
-│   └── database.php          ← Đọc $_ENV, trả config PDO
-│
-├── database/migrations/
-│   ├── 000_run_all.sql       ← Chạy file này để tạo toàn bộ DB
-│   ├── 001_create_users_table.sql
-│   ├── 002_create_categories_budgets.sql
-│   └── 003_create_transactions.sql
-│
-└── app/
-    ├── Core/
-    │   ├── Database.php      ← Singleton PDO
-    │   └── Router.php        ← Front Controller / Dispatcher
-    │
-    ├── Middleware/
-    │   └── AuthMiddleware.php ← Chặn route nếu chưa đăng nhập
-    │
-    ├── Helpers/
-    │   ├── CsrfTokenManager.php ← Generate + validate CSRF token
-    │   ├── FlashMessage.php     ← Flash message qua redirect
-    │   └── Paginator.php        ← Phân trang tái sử dụng
-    │
-    ├── Models/               ← [M] Business Objects
-    │   ├── Transaction.php        ← abstract + Template Method (TV1)
-    │   ├── IncomeTransaction.php  ← kế thừa Transaction (TV1/TV4)
-    │   ├── ExpenseTransaction.php ← kế thừa Transaction (TV3)
-    │   ├── Budget.php             ← isExceeded(), alert_threshold (TV2)
-    │   └── Category.php           ← (TV2)
-    │
-    ├── Repositories/         ← [R] Database Access Layer (chỉ nơi viết SQL)
-    │   ├── BaseRepository.php     ← abstract, $this->db PDO (TV3)
-    │   ├── UserRepository.php     ← bảng users + login_logs (TV1)
-    │   ├── CategoryRepository.php ← bảng categories (TV2)
-    │   ├── BudgetRepository.php   ← bảng budgets + interface (TV2)
-    │   └── TransactionRepository.php ← bảng transactions (TV3, TV4/TV5 dùng lại)
-    │
-    ├── Services/             ← [S] Business Logic Layer
-    │   ├── AuthService.php        ← login, register, remember me (TV1/TV5)
-    │   ├── BudgetService.php      ← checkAlert(), getBudgetSummary() (TV2)
-    │   ├── ExpenseService.php     ← add, update, delete expense (TV3)
-    │   ├── IncomeService.php      ← add, update, delete income (TV4)
-    │   ├── FinanceReport.php      ← generateMonthly(), exportCsv() (TV4)
-    │   └── ReportService.php      ← Chart.js data format (TV5)
-    │
-    ├── Controllers/          ← [C] HTTP Layer
-    │   ├── BaseController.php     ← render(), redirect(), currentUserId()
-    │   ├── AuthController.php     ← /login, /register, /logout (TV1)
-    │   ├── CategoryController.php ← /categories CRUD (TV2)
-    │   ├── BudgetController.php   ← /budget (TV2)
-    │   ├── ExpenseController.php  ← /expenses CRUD (TV3)
-    │   ├── IncomeController.php   ← /incomes CRUD (TV4)
-    │   ├── DashboardController.php← / và /dashboard (TV5)
-    │   └── ReportController.php   ← /report, /report/export (TV5)
-    │
-    └── Views/                ← [V] PHP Templates
-        ├── partials/
-        │   ├── layout.php    ← header, nav, Bootstrap (TV1)
-        │   └── footer.php    ← JS, Chart.js lazy load
-        ├── auth/             ← login.php, register.php (TV1)
-        ├── categories/       ← index.php (TV2)
-        ├── budget/           ← index.php với thanh tiến độ màu (TV2)
-        ├── expenses/         ← index, create, edit (TV3)
-        ├── incomes/          ← index, create, edit (TV4)
-        ├── dashboard/        ← index.php với 2 Chart.js (TV5)
-        └── report/           ← index.php + nút export CSV (TV5)
+app/
+├── Core/              Router, Container, Database (Singleton)
+├── Controllers/       AuthController, BudgetController, ...
+├── Services/          AuthService, BudgetService, FinanceReport, ...
+├── Repositories/      UserRepository, TransactionRepository, ...
+├── Models/            Transaction (abstract + Template Method), Budget, Category
+├── Middleware/        AuthMiddleware
+├── Helpers/           CsrfTokenManager, FlashMessage, Paginator
+└── Views/             auth, budget, categories, transactions, dashboard, report
+
+database/
+├── de13_finance.sql   ⭐ File SQL hoàn chỉnh — import trực tiếp
+└── migrations/        (deprecated — dùng de13_finance.sql thay thế)
+
+public/               index.php (entry point), css/, js/
 ```
 
 ---
 
-## Cài đặt & Chạy
+## 3️⃣ Tính Năng Chính
 
-```bash
-# 1. Copy cấu hình
-cp .env.example .env
-# Mở .env, điền DB_USER và DB_PASS của máy
+| Tính năng | Route | TV | Công nghệ |
+|-----------|-------|----|----|
+| Đăng ký / Đăng nhập | `/auth/*` | TV1 | PHPMailer, Password hash (BCRYPT) |
+| Dual login | `/login` | TV1 | Username OR Email |
+| Budget (Ngân sách) | `/budget` | TV2 | Budget alerts, Progress bars |
+| Danh mục | `/categories` | TV2 | Icon picker, Color selector |
+| Giao dịch Thu/Chi | `/transactions` | TV3/TV4 | Filter, Sort, Paginate |
+| Dashboard | `/` | TV5 | 4 Stat cards + 3 Charts (Chart.js) |
+| Báo cáo | `/report` | TV5 | Chart + Export CSV |
 
-# 2. Tạo database
-mysql -u root -p -e "CREATE DATABASE de13_finance CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+---
 
-# 3. Chạy migration
-cd database/migrations
-mysql -u root -p de13_finance < 001_create_users_table.sql
-mysql -u root -p de13_finance < 002_create_categories_budgets.sql
-mysql -u root -p de13_finance < 003_create_transactions.sql
-cd ../..
+## 4️⃣ Kiến Trúc Yêu Chốt
 
-# 4. Start server
-php -S localhost:8000 -t public
+### Dependency Injection + Container
+```php
+// public/index.php
+$container = new \App\Core\Container();
+$container->bind(BudgetRepositoryInterface::class, BudgetRepository::class);
+$router = new \App\Core\Router($container);
+```
+- **Container** auto-resolve dependencies qua Reflection
+- **Router** dispatch request → `Container::make(Controller)` → action()
+
+### Template Method (Transaction)
+```php
+// Models/Transaction.php
+final public function process(): void {
+    $this->validate();   // abstract
+    $this->save();       // abstract
+    $this->notify();     // abstract — khác nhau giữa Expense/Income
+}
 ```
 
-Mở trình duyệt: **http://localhost:8000/register** → đăng ký → đăng nhập → bắt đầu dùng.
-
----
-
-## Luồng request
-
-```
-Browser → .htaccess → public/index.php
-    │
-    ├─ load autoload.php (PSR-4)
-    ├─ load .env
-    ├─ session_start()
-    ├─ tryRememberLogin() (nếu có cookie)
-    └─ Router::dispatch(method, uri)
-           │
-           ├─ match route
-           ├─ run Middleware (AuthMiddleware nếu có)
-           └─ new Controller() → action()
-                  │
-                  ├─ gọi Service (business logic)
-                  │      └─ gọi Repository (SQL)
-                  │             └─ Database::getInstance() (PDO)
-                  └─ render(view, data) → HTML
+### Repository Pattern
+```php
+// Controllers gọi Service → Service gọi Repository → Repository chứa SQL
+class BudgetService {
+    public function __construct(
+        private BudgetRepositoryInterface $budgetRepo,
+        private TransactionRepository $txRepo
+    ) {}
+}
 ```
 
 ---
 
-## Design Patterns
+## 5️⃣ Thư Viện Dùng
 
-| Pattern | File | Mô tả |
-|---------|------|-------|
-| **Template Method** | `Models/Transaction.php` | `final process()` = validate→save→notify |
-| **Repository** | `Repositories/*` | Tách SQL khỏi business logic |
-| **Singleton** | `Core/Database.php` | 1 PDO duy nhất/request |
-| **Front Controller** | `public/index.php` | Mọi request qua 1 điểm |
-| **Dependency Injection** | Tất cả Service/Controller | Inject qua constructor |
-| **PRG** | Tất cả Controller POST | Redirect sau POST tránh resubmit |
-| **Interface** | `BudgetRepositoryInterface` | Contract tách khỏi implementation |
+### Frontend
+- **Bootstrap 5**: CSS framework (responsive, components)
+- **Chart.js**: Biểu đồ (bar, line, doughnut) — Dashboard, Report
+- **Bootstrap Icons**: Icon set (Navbar, Budget, Categories)
+- **Google Fonts**: Be Vietnam Pro (Vietnamese support)
 
----
-
-## Phân công thành viên
-
-| TV | Tên | Luồng | File chính |
-|----|-----|-------|-----------|
-| TV1 | Đạt | Auth | `AuthController`, `AuthService`, `UserRepository`, `Transaction` (abstract) |
-| TV2 | Hoài | Budget | `BudgetController`, `CategoryController`, `BudgetService`, `Budget`, `Category` |
-| TV3 | Quang | Chi tiêu | `ExpenseController`, `ExpenseService`, `ExpenseTransaction`, `TransactionRepository` |
-| TV4 | Hiếu | Thu nhập | `IncomeController`, `IncomeService`, `IncomeTransaction`, `FinanceReport` |
-| TV5 | Hằng | Báo cáo | `DashboardController`, `ReportController`, `ReportService` |
+### Backend
+- **PDO**: MySQL database driver
+- **PHPMailer**: Email (verification, password reset)
+- **fputcsv()**: Export CSV (no external lib needed)
+- **Reflection API**: Container dependency resolution
 
 ---
 
-## Câu hỏi hay bị hỏi khi demo
+## 6️⃣ Phân Công 5 Thành Viên
 
-**1. `process()` là `final` để làm gì?**
-Đảm bảo thứ tự validate→save→notify không thể bị subclass phá vỡ.
+| TV | Tên | Luồng |
+|----|-----|-------|
+| TV1 | Đạt | Auth (login, register, email verify, password reset) |
+| TV2 | Hoài | Budget + Categories (ngân sách, danh mục) |
+| TV3 | Quang | Expense transactions (chi tiêu, alerts) |
+| TV4 | Hiếu | Income transactions, FinanceReport (thu nhập) |
+| TV5 | Hằng | Dashboard, Report, ReportService (biểu đồ) |
 
-**2. Tại sao dùng Repository Pattern thay vì viết SQL thẳng trong Controller?**
-Tách biệt SQL khỏi logic nghiệp vụ. Nếu đổi DB, chỉ sửa Repository — Controller và Service không thay đổi.
+---
 
-**3. Dependency Injection hoạt động thế nào ở đây?**
-`new BudgetService(new BudgetRepository(), new TransactionRepository())` — inject qua constructor. Service không tự `new` Repository bên trong — dễ thay và dễ test.
+## 7️⃣ Luồng Request Chính
 
-**4. CSRF token bảo vệ gì?**
-Chống Cross-Site Request Forgery — kẻ tấn công không thể giả mạo request vì không biết token trong session.
+```
+Browser Request
+    ↓
+.htaccess (rewrite) → public/index.php
+    ↓
+Bootstrap: Container + Bindings + Session + Remember Me
+    ↓
+Router::dispatch(method, uri)
+    ↓
+Middleware (AuthMiddleware)
+    ↓
+Container::make(ControllerClass)
+    ↓
+Controller::action() 
+    → call Service (business logic)
+    → call Repository (SQL)
+    → render(view, data)
+    ↓
+HTML Response
+```
 
-**5. Tại sao mọi query đều có `WHERE user_id = ?`?**
-Multi-user app — thiếu điều kiện này thì user A xem/xoá được dữ liệu của user B.
+---
+
+## 8️⃣ Design Patterns
+
+| Pattern | Cách dùng |
+|---------|-----------|
+| **Dependency Injection** | Container resolve dependencies qua constructor |
+| **Singleton** | Database (1 PDO per request) |
+| **Repository** | Tách SQL khỏi Service layer |
+| **Template Method** | Transaction::process() = validate→save→notify |
+| **Front Controller** | Mọi request qua public/index.php |
+| **PRG (Post-Redirect-Get)** | Form POST → redirect → GET (tránh resubmit) |
+
+---
+
+## 9️⃣ Tính Năng Nổi Bật
+
+### Dual Login
+- Input: Tên đăng nhập hoặc email
+- Backend thử username trước, rồi email
+- `AuthService::login($credential, $password)`
+
+### Budget Alerts
+- Check sau mỗi expense transaction
+- So sánh: spent vs limit
+- Alert: "Đã chi X đ / Y đ (Z%)"
+
+### Password Strength Indicator
+- Real-time JavaScript feedback
+- 5 levels: Rất yếu → Rất mạnh
+- Scoring: 8+ ký tự, chữ HOA, số, ký tự đặc biệt
+
+### Dashboard Charts
+- **Bar**: 4 tuần gần nhất (income vs expense)
+- **Donut**: Chi tiêu/thu nhập theo danh mục
+- **Stat Cards**: Số dư, chênh lệch, tổng chi/thu
+
+### CSV Export
+- No external library (dùng `fputcsv()`)
+- UTF-8 BOM để Excel đọc tiếng Việt
+- Format: Ngày | Loại | Danh mục | Số tiền | Ghi chú
+
+---
+
+## 🔟 Cách Sửa Từng Phần
+
+| Cần sửa | File |
+|---------|------|
+| Thêm field login, đổi validation | `AuthController::register()`, `AuthService::login()` |
+| Đổi threshold budget alert | `BudgetService::checkAlert()` |
+| Thêm loại chart | `DashboardController::index()`, `ReportService` |
+| Thay đổi giao diện | `Views/` tương ứng + CSS files |
+| Thay đổi logic chi/thu | `ExpenseService`, `IncomeService` |
+
+---
+
+## 🔐 Security
+
+- ✅ CSRF token (form POST)
+- ✅ Password hash (BCRYPT)
+- ✅ Session + Remember Me (secure cookie)
+- ✅ Email verification (registration)
+- ✅ Password reset (token hết hạn)
+- ✅ Auth middleware (protect routes)
+
+---
+
+## 📝 Deployment
+
+### Requirements
+- PHP 8.x + PDO MySQL + mbstring
+- MySQL 5.7+
+- Document root: `/public`
+
+### Steps
+1. Upload project (skip `.env`)
+2. Create database & import migrations
+3. Create `.env` trên server (production config)
+4. Set document root tới `/public`
+5. Enable `mod_rewrite` (Apache) hoặc `try_files` (Nginx)
+
+---
+
+## 📞 Support
+
+**Error**: Email không gửi được?
+- Check `.env`: `MAIL_HOST`, `MAIL_USER`, `MAIL_PASS`
+- Fallback: Local `php mail()` (ghi log tại `storage/logs/`)
+
+**Error**: Không login được?
+- Check CSRF token → Submit form lại
+- Check database (users table)
+- Check session (cookie browser)
+
+**Error**: Chart không hiển thị?
+- Check browser console (JavaScript errors)
+- Check `$needChartJs = true` ở Controller
+- Check Chart.js CDN load
+
+---
+
+**Full Documentation**: Xem [README.md](README.md) để chi tiết từng file, method, logic.

@@ -1,17 +1,16 @@
 <?php
 namespace App\Controllers;
 
-use App\Services\{AuthService, MailService};
-use App\Repositories\UserRepository;
+use App\Services\AuthService;
 use App\Helpers\{CsrfTokenManager, FlashMessage};
 
 class AuthController extends BaseController
 {
     private AuthService $auth;
 
-    public function __construct()
+    public function __construct(AuthService $auth)
     {
-        $this->auth = new AuthService(new UserRepository(), new MailService());
+        $this->auth = $auth;
     }
 
     // ── GET /login ─────────────────────────────────────────────
@@ -111,13 +110,16 @@ class AuthController extends BaseController
             $_SESSION['_login_prefill_username'] = $username;
             $this->redirect(BASE_URL . '/login');
         } catch (\RuntimeException $e) {
-                $_SESSION['_register_old']    = [
-                    'username'         => $username,
-                    'email'            => $email,
-                    'password'         => $password,
-                    'password_confirm' => $confirm,
-                ];
-            $_SESSION['_register_errors'] = ['username' => [$e->getMessage()]];
+            $_SESSION['_register_old'] = [
+                'username'         => $username,
+                'email'            => $email,
+                'password'         => $password,
+                'password_confirm' => $confirm,
+            ];
+
+            $message = $e->getMessage();
+            $field   = str_contains($message, 'Email') ? 'email' : 'username';
+            $_SESSION['_register_errors'] = [$field => [$message]];
             $this->redirect(BASE_URL . '/register');
         }
     }
